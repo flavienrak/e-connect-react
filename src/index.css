@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Black.ttf");
+  font-weight: 900;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-ExtraBold.ttf");
+  font-weight: 800;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Bold.ttf");
+  font-weight: 700;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Semibold.ttf");
+  font-weight: 600;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Semibold.ttf");
+  font-weight: 500;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Medium.ttf");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Regular.ttf");
+  font-weight: 300;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Light.ttf");
+  font-weight: 200;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Thin.ttf");
+  font-weight: 100;
+}
+
+:root {
+  --hover-color: rgba(255, 255, 255, 0.141);
+  --violet-color: #5b21b6;
+  --black-color: black;
+  --focus-color: rgb(0, 0, 0, 0.1);
+  --bg-color: rgba(152, 150, 150, 0.778);
+  --white-color: white;
+  --red-color: red;
+}
+
+*,
+html,
+body {
+  --primary-color: rgb(91, 19, 91);
+  --primary-color: #9c149c;
+  --linear-gradient: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-color)
+  );
+
+  --white: #ffffff;
+  --text: #033;
+  --bg-red: rgba(239, 68, 68, 0.25);
+
+  margin: 0;
+  padding: 0;
+  font-size: calc(0.6vh + 0.45vw + 5px);
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+.purpleTheme * {
+  --primary-color: #5a3bd8;
+}
+.greenTheme * {
+  --primary-color: #1dc85c;
+}
+.yellowTheme * {
+  --primary-color: #e0b638;
+}
+.defaultTheme * {
+  --primary-color: #9c149c;
+}
+
+.lightMode {
+  --bg-primary: #f9f8fd;
+  --bg-secondary: #e9e8ed;
+  --text: #09080d;
+  --opposite: #09080d;
+}
+.darkMode {
+  --bg-primary: #19181d;
+  --bg-secondary: #09080d;
+  --text: #f9f8fd;
+  --opposite: #f9f8fd;
+}
+.darkMode .input {
+  background: var(--bg-secondary);
+  border: none;
+  color: var(--opposite);
+}
+.darkMode .input::placeholder {
+  color: var(--opposite);
+}
+.darkMode .textarea {
+  background: transparent;
+  border: 1px solid #434244;
+}
+.darkMode .textarea::placeholder {
+  color: var(--opposite);
+}
+
+.darkMode .button {
+  background: transparent;
+  border: 1px solid #434244;
+  color: var(--opposite);
+}
+.lightMode .button {
+  background: #e9e8ed;
+  border: 1px solid transparent;
+  color: var(--opposite);
+}
+
+body {
+  min-height: 100vh;
+  min-width: 100%;
+  overflow-y: scroll;
+}
+textarea {
+  resize: none;
+}
+.bgText {
+  color: transparent;
+  background: #9c149c;
+  background-clip: text;
+}
+.bgTrans {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.scr {
+  scrollbar-width: thin;
+  scrollbar-color: #e9e8ed transparent;
+}
+.scr::-webkit-scrollbar {
+  width: 6px;
+  cursor: default;
+}
+.scr::-webkit-scrollbar-thumb:hover {
+  background-color: #e9e8ed;
+}
+.scr::-webkit-scrollbar-track {
+  background-color: transparent;
+  transition: 0.15s;
+}
