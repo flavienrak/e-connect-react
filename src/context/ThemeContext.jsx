@@ -10,12 +10,14 @@ export default function ThemeContextProvider({ children }) {
     <ThemeContext.Provider value={{ theme, mode }}>
       <div
         className={`${
-          theme === "purple"
-            ? "purpleTheme"
-            : theme === "green"
+          theme === "green"
             ? "greenTheme"
             : theme === "yellow"
             ? "yellowTheme"
+            : theme === "blue"
+            ? "blueTheme"
+            : theme === "red"
+            ? "redTheme"
             : "defaultTheme"
         }`}
       >

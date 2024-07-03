@@ -1,24 +1,68 @@
-import { useEffect, useRef, useState } from "react";
+import EmojiPicker from "emoji-picker-react";
+import toast from "react-hot-toast";
+import qs from "query-string";
+
+import { useContext, useEffect, useRef, useState } from "react";
 import { isEmpty } from "../../lib/allFunctions";
 import { IoImageOutline } from "react-icons/io5";
+import { BsEmojiSmile } from "react-icons/bs";
+import { useDispatch, useSelector } from "react-redux";
+import { format } from "timeago.js";
+import { UidContext } from "../../context/UidContext";
+import { addOnePostInfos } from "../../redux/slices/postsSlice";
+import { FaUser } from "react-icons/fa";
 
 export default function Postpub() {
+  const { apiUrl, toastStyle, profilImg, path, currentQuery } =
+    useContext(UidContext);
+  const { user } = useSelector((state) => state.user);
+  const { mode } = useSelector((state) => state.persistInfos);
+
   const textarea = useRef(null);
+  const emoji = useRef(null);
+  const dispatch = useDispatch();
+
   const [message, setMessage] = useState("");
   const [image, setImage] = useState("");
+  const [file, setFile] = useState(null);
+  const [showEmoji, setShowEmoji] = useState(false);
 
   useEffect(() => {
     if (textarea.current) {
-      textarea.current.style.height = "1rem";
+      textarea.current.style.height = "2.5rem";
       textarea.current.style.height = `${textarea.current.scrollHeight}px`;
     }
   }, [message]);
 
-  const handleChangeFile = (e) => {
-    if (e.target.files) {
-      const newUrl = URL.createObjectURL(e.target.files[0]);
+  useEffect(() => {
+    if (showEmoji) {
+      const handleClickOutside = (e) => {
+        if (emoji.current && !emoji.current.contains(e.target)) {
+          setShowEmoji(false);
+        }
+      };
+      document.addEventListener("click", handleClickOutside);
+      return () => {
+        document.removeEventListener("click", handleClickOutside);
+      };
+    }
+  }, [showEmoji]);
+
+  useEffect(() => {
+    if (file) {
+      const newUrl = URL.createObjectURL(file);
       setImage(newUrl);
     }
+  }, [file]);
+
+  const handleChangeFile = (e) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleChangeEmoji = (e) => {
+    setMessage((prev) => prev + e.emoji);
   };
 
   const handleReset = () => {
@@ -26,30 +70,109 @@ export default function Postpub() {
     setMessage("");
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!isEmpty(message?.trim()) || file) {
+      const data = new FormData();
+      if (!isEmpty(message?.trim())) {
+        data.append("message", message.trim());
+      }
+      if (file) {
+        data.append("file", file);
+      }
+
+      const res = await fetch(`${apiUrl}/post/${user._id}/create-post`, {
+        method: "POST",
+        body: data,
+      }).then((res) => res.json());
+
+      handleReset();
+
+      if (res?.post) {
+        dispatch(addOnePostInfos({ post: res.post }));
+        toast.success("Nouveau post publie", toastStyle);
+
+        const url = qs.stringifyUrl(
+          {
+            url: path,
+            query: {
+              path:
+                currentQuery.path === "accueil" ? currentQuery.path : "accueil",
+            },
+          },
+          { skipNull: true }
+        );
+        setActualLink(url);
+      }
+    }
+  };
+
+  const handleEnter = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      handleSubmit(e);
+    }
+  };
+
   return (
-    <>
-      <div className="flex items-center justify-between flex-col gap-4 mt-6 rounded-xl bg-[var(--bg-primary)] p-3 min-h-14">
-        <textarea
-          ref={textarea}
-          type="text"
-          className="w-full text-sm outline-none py-3 px-4 rounded-lg overflow-hidden bg-[var(--bg-secondary)] textarea"
-          placeholder="Quoi de neuf aujourd'hui ?"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
+    <form onSubmit={handleSubmit} className="w-full overflow-visible px-0">
+      <div className="w-full flex items-center justify-between flex-col gap-4 rounded-xl bg-[var(--bg-primary)] p-3 min-h-14">
+        <div className="relative w-full flex items-center">
+          <textarea
+            ref={textarea}
+            type="text"
+            className="w-full text-sm outline-none py-3 px-4 rounded-lg overflow-hidden bg-[var(--bg-secondary)] pl-12 placeholder:opacity-50 text-[var(--opposite)] font-light textarea"
+            placeholder="Quoi de neuf aujourd'hui ?"
+            value={message}
+            onKeyDown={handleEnter}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+
+          <i
+            ref={emoji}
+            onClick={() => setShowEmoji((prev) => !prev)}
+            className={`cursor-pointer absolute left-3 ${
+              showEmoji
+                ? "text-[var(--primary-color)]"
+                : "text-[var(--opposite)] opacity-25 hover:opacity-100"
+            }`}
+          >
+            <BsEmojiSmile size={"1.5rem"} />
+            <div className="absolute top-10 -left-3">
+              <EmojiPicker
+                onEmojiClick={handleChangeEmoji}
+                theme={mode}
+                open={showEmoji}
+              />
+            </div>
+          </i>
+        </div>
 
         {(!isEmpty(message.trim()) || !isEmpty(image.trim())) && (
-          <div className=" flex w-full flex-col gap-2 rounded-xl bg-[var(--white)] p-4">
+          <div className=" flex w-full flex-col gap-2 rounded-xl bg-[var(--bg-primary)] p-4">
             <div className="flex flex-row justify-between">
               <div className="flex flex-row gap-2">
-                <img
-                  src={"/icon.png"}
-                  className="size-10 rounded-full object-cover "
-                  alt=""
-                />
+                {isEmpty(user.image) ? (
+                  <>
+                    <i className="w-10 h-10 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
+                      <FaUser size={"1rem"} />
+                    </i>
+                  </>
+                ) : (
+                  <img
+                    src={profilImg + user.image}
+                    alt="Profile"
+                    className="rounded-full h-9 w-9"
+                  />
+                )}
+
                 <div className="flex flex-col justify-center">
-                  <p className="font-bold">Flavien RAK</p>
-                  <p className=" text-xs text-gray-500 ">10h:10</p>
+                  <p className="font-bold text-[var(--opposite)]">
+                    {user.name}
+                  </p>
+                  <p className=" text-xs text-gray-400">
+                    {format(Date.now(), "fr")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -57,7 +180,7 @@ export default function Postpub() {
             {!isEmpty(image.trim()) && (
               <div className=" h-72 w-full rounded-xl">
                 <img
-                  src={"/icon.png"}
+                  src={image}
                   className="size-full rounded-xl object-cover"
                   alt=""
                 />
@@ -66,7 +189,9 @@ export default function Postpub() {
 
             {!isEmpty(message.trim()) && (
               <div className="flex items-center gap-2">
-                <p className="text-sm">{message}</p>
+                <p className="text-sm text-[var(--opposite)] font-light">
+                  {message}
+                </p>
               </div>
             )}
           </div>
@@ -92,18 +217,21 @@ export default function Postpub() {
             />
           </div>
           <div className="flex gap-2 items-center">
-            <button
+            <label
               onClick={handleReset}
-              className="h-full rounded-3xl button px-4 py-2 text-xs button"
+              className="h-full rounded-3xl button px-4 py-2 text-xs text-[var(--opposite)] cursor-pointer button"
             >
               Annuler
-            </button>
-            <button className="h-full rounded-3xl bg-[var(--primary-color)] px-4 py-2 text-xs font-semibold  text-teal-50">
+            </label>
+            <button
+              type="submit"
+              className="h-full rounded-3xl bg-[var(--primary-color)] px-4 py-2 text-xs font-semibold  text-teal-50"
+            >
               Publier
             </button>
           </div>
         </div>
       </div>
-    </>
+    </form>
   );
 }

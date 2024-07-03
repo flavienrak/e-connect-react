@@ -1,4 +1,4 @@
-const Messageperso = ({ pdp, nom, message }) => {
+export default function Messageperso({ pdp, nom, message }) {
   return (
     <>
       <div className="mt-2 flex cursor-pointer flex-row gap-3">
@@ -18,5 +18,4 @@ const Messageperso = ({ pdp, nom, message }) => {
       </div>
     </>
   );
-};
-export default Messageperso;
+}

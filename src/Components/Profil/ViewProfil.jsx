@@ -1,18 +1,18 @@
 import SingleProfil from "./SingleProfil";
-import Cardpost from "../Centre/Cardpost";
 import Ajouter from "../Droite/Ajouter";
-import EditProfil from "./EditProfil";
+import Cardpost from "../Centre/Cardpost";
 
-import { useContext, useState } from "react";
-import { useSelector } from "react-redux";
-import { isEmpty } from "../../lib/allFunctions";
+import { useContext, useEffect, useState } from "react";
 import { UidContext } from "../../context/UidContext";
+import { isEmpty } from "../../lib/allFunctions";
+import { useSelector } from "react-redux";
 
-export default function Profil() {
-  const { user } = useSelector((state) => state.user);
-  const { posts } = useSelector((state) => state.posts);
+export default function ViewProfil() {
+  const { currentQuery, apiUrl, userId } = useContext(UidContext);
   const { users } = useSelector((state) => state.users);
-  const { userId } = useContext(UidContext);
+  const { posts } = useSelector((state) => state.posts);
+
+  const [user, setUser] = useState(null);
 
   const [items, setItems] = useState([
     {
@@ -34,16 +34,28 @@ export default function Profil() {
 
   const [active, setActive] = useState(items[0].active);
 
-  return (
-    <div className="mt-6 w-full">
-      <div />
-      <div className="flex flex-col gap-6">
-        <div className="px-4 h-14 flex justify-center items-center rounded-xl bg-[var(--bg-primary)]">
-          <p className="text-[var(--primary-color)] font-semibold text-lg">
-            Mon profil
-          </p>
-        </div>
+  useEffect(() => {
+    if (currentQuery?.user) {
+      (async () => {
+        const res = await fetch(
+          `${apiUrl}/user/${userId}/${currentQuery.user}/view-profil`
+        ).then((res) => res.json());
 
+        console.log(res);
+
+        if (res?.user) {
+          setUser(res.user);
+        }
+      })();
+    }
+  }, [currentQuery?.user]);
+
+  console.log(user);
+
+  if (!isEmpty(user))
+    return (
+      <div className="mt-6 w-full">
+        <div />
         <div className="flex flex-col gap-6">
           <SingleProfil
             user={user}
@@ -52,7 +64,6 @@ export default function Profil() {
             setActive={setActive}
             setItems={setItems}
           />
-          <EditProfil />
 
           {!isEmpty(user?.posts) && active === items[0].active && (
             <>
@@ -80,12 +91,10 @@ export default function Profil() {
             <>
               {user.followed.map((item) => {
                 const actualUser = users.find((us) => us._id === item);
+
                 if (!isEmpty(actualUser))
                   return (
-                    <div
-                      key={item._id}
-                      className="w-full grid grid-cols-2 gap-2"
-                    >
+                    <div key={item} className="w-full grid grid-cols-2 gap-2">
                       <Ajouter
                         user={actualUser}
                         isFollowed={user.followed.includes(actualUser._id)}
@@ -100,15 +109,13 @@ export default function Profil() {
             <>
               {user.followers.map((item) => {
                 const actualUser = users.find((us) => us._id === item);
+
                 if (!isEmpty(actualUser))
                   return (
-                    <div
-                      key={item._id}
-                      className="w-full grid grid-cols-2 gap-2"
-                    >
+                    <div key={item} className="w-full grid grid-cols-2 gap-2">
                       <Ajouter
                         user={actualUser}
-                        isFollowed={user.followed.includes(item._id)}
+                        isFollowed={user.followed.includes(actualUser._id)}
                       />
                     </div>
                   );
@@ -118,6 +125,5 @@ export default function Profil() {
           <br />
         </div>
       </div>
-    </div>
-  );
+    );
 }

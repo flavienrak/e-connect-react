@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux";
 import { UidContext } from "../../context/UidContext";
 import { updatePersistInfos } from "../../redux/slices/persistSlice";
 import { HiEye, HiEyeOff } from "react-icons/hi";
+import { BiSolidUser } from "react-icons/bi";
 
 export default function Login() {
   const login = useRef(null);
@@ -201,17 +202,23 @@ export default function Login() {
   };
 
   return (
-    <div className={`container ${signUpMode ? "sign-up-mode" : ""}`}>
+    <div
+      className={`container bg-[var(--bg-primary)] ${
+        signUpMode ? "sign-up-mode" : ""
+      }`}
+    >
       <div className="forms-container">
         <div className="signin-signup">
           <form ref={login} onSubmit={handleLogin} className="sign-in-form">
-            <h2 className="title">Se connecter</h2>
+            <h2 className="title text-[var(--opposite)]">Se connecter</h2>
             <div
               className={`input-field ${
-                isSubmit && !email.valid ? "error" : ""
+                isSubmit && (!email.valid || userNotFound) ? "error" : ""
               }`}
             >
-              <i className="bx bxs-user"></i>
+              <i className="flex justify-center items-center">
+                <BiSolidUser size={"1.15rem"} />
+              </i>
               <input
                 type="text"
                 placeholder="Email"
@@ -219,12 +226,13 @@ export default function Login() {
                   setEmail((prev) => ({ ...prev, value: e.target.value }))
                 }
                 value={email.value}
-                className={``}
               />
             </div>
             <div
               className={`input-field relative flex items-center ${
-                isSubmit && !password.valid ? "error" : ""
+                isSubmit && (!password.valid || incorrectPassword)
+                  ? "error"
+                  : ""
               }`}
             >
               {" "}
@@ -261,7 +269,7 @@ export default function Login() {
             onSubmit={handleRegister}
             className="sign-up-form"
           >
-            <h2 className="title">Inscription</h2>
+            <h2 className="title text-[var(--opposite)]">Inscription</h2>
             <div
               className={`input-field ${
                 (isSubmit && !nom.valid) || (isSubmit && nameError)

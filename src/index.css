@@ -61,8 +61,7 @@
 *,
 html,
 body {
-  --primary-color: rgb(91, 19, 91);
-  --primary-color: #9c149c;
+  --primary-color: #5a3bd8;
   --linear-gradient: linear-gradient(
     135deg,
     var(--primary-color),
@@ -80,9 +79,17 @@ body {
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
 }
-
-.purpleTheme * {
-  --primary-color: #5a3bd8;
+body {
+  min-height: 100vh;
+  min-width: 100%;
+  overflow-y: scroll;
+}
+textarea {
+  resize: none;
+  height: 3rem;
+}
+.blueTheme * {
+  --primary-color: #149be9;
 }
 .greenTheme * {
   --primary-color: #1dc85c;
@@ -90,8 +97,11 @@ body {
 .yellowTheme * {
   --primary-color: #e0b638;
 }
+.redTheme * {
+  --primary-color: #ea4f4f;
+}
 .defaultTheme * {
-  --primary-color: #9c149c;
+  --primary-color: #5a3bd8;
 }
 
 .lightMode {
@@ -111,36 +121,36 @@ body {
   border: none;
   color: var(--opposite);
 }
-.darkMode .input::placeholder {
+
+.input::placeholder {
   color: var(--opposite);
 }
+
 .darkMode .textarea {
   background: transparent;
   border: 1px solid #434244;
 }
-.darkMode .textarea::placeholder {
+.textarea::placeholder {
   color: var(--opposite);
 }
 
 .darkMode .button {
   background: transparent;
   border: 1px solid #434244;
-  color: var(--opposite);
 }
+
+.lightMode .brd {
+  border-color: #dedede;
+}
+.darkMode .brd {
+  border-color: #434244;
+}
+
 .lightMode .button {
   background: #e9e8ed;
   border: 1px solid transparent;
-  color: var(--opposite);
 }
 
-body {
-  min-height: 100vh;
-  min-width: 100%;
-  overflow-y: scroll;
-}
-textarea {
-  resize: none;
-}
 .bgText {
   color: transparent;
   background: #9c149c;

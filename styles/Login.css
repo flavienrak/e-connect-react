@@ -8,7 +8,6 @@
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background-color: #fff;
   overflow: hidden;
 }
 
@@ -69,7 +68,6 @@ form.sign-up-form {
 
 .title {
   font-size: 3rem;
-  color: var(--text);
   margin-bottom: 0.75rem;
 }
 
