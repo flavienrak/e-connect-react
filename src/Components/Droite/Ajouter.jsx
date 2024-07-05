@@ -1,16 +1,17 @@
 import toast from "react-hot-toast";
 import qs from "query-string";
+import ProfilImg from "../Profil/ProfilImg";
 
-import { FaUser } from "react-icons/fa";
-import { isEmpty } from "../../lib/allFunctions";
 import { useContext, useEffect, useState } from "react";
 import { UidContext } from "../../context/UidContext";
 import { useDispatch } from "react-redux";
 import { updateUserInfos } from "../../redux/slices/userSlice";
 import { Link } from "react-router-dom";
+import { SocketContext } from "../../context/SocketContext";
 
-export default function Ajouter({ user, isFollowed }) {
-  const { profilImg, apiUrl, userId, toastStyle, path, currentQuery } =
+export default function Ajouter({ isOwn, user, isFollowed }) {
+  const { isOnline } = useContext(SocketContext);
+  const { apiUrl, userId, toastStyle, path, currentQuery } =
     useContext(UidContext);
   const dispatch = useDispatch();
 
@@ -39,8 +40,6 @@ export default function Ajouter({ user, isFollowed }) {
     const res = await fetch(
       `${apiUrl}/user/${userId}/${user._id}/follow-user`
     ).then((res) => res.json());
-
-    console.log(res);
 
     if (res?.user) {
       if (isFollowed) {
@@ -71,37 +70,37 @@ export default function Ajouter({ user, isFollowed }) {
           to={actualLink}
           className="h-10 w-10 relative min-w-10 min-h-10 cursor-pointer"
         >
-          {isEmpty(user.image) ? (
-            <>
-              <i className="w-10 h-10 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
-                <FaUser size={"1rem"} />
-              </i>
-            </>
-          ) : (
-            <img
-              src={profilImg + user.image}
-              alt="Profile"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          )}
+          <ProfilImg
+            online={isOnline(user._id) && user._id !== userId}
+            image={user.image}
+          />
         </Link>
-        <div className="flex flex-col gap-1 flex-1">
-          <p className="font-bold text-[var(--opposite)]">{user.name}</p>
-          <div className="flex gap-2">
-            <button
-              onClick={handleRejectUser}
-              className="rounded-3xl px-2 py-1.5 w-1/2 text-xs text-[var(--opposite)] button"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handleFollowUser}
-              className="rounded-3xl bg-[var(--primary-color)] px-2 py-1.5 w-1/2 text-[var(--white-color)] hover:opacity-90 text-xs"
-            >
-              {isFollowed ? "Abonnée" : "Suivre"}
-            </button>
+        {isOwn ? (
+          <div className="flex flex-col flex-1">
+            <p className="font-bold text-[var(--opposite)]">{user.name}</p>
+            <p className="text-xs line-clamp-1 text-[var(--opposite)] opacity-80 font-light">
+              {user.email}
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-1 flex-1">
+            <p className="font-bold text-[var(--opposite)]">{user.name}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRejectUser}
+                className="rounded-3xl px-2 py-1.5 w-1/2 text-xs text-[var(--opposite)] button"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleFollowUser}
+                className="rounded-3xl bg-[var(--primary-color)] px-2 py-1.5 w-1/2 text-[var(--white-color)] hover:opacity-90 text-xs"
+              >
+                {isFollowed ? "Abonnée" : "Suivre"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

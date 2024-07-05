@@ -6,6 +6,7 @@ import persistSlice from "./slices/persistSlice";
 import usersSlice from "./slices/usersSlice";
 import userSlice from "./slices/userSlice";
 import postsSlice from "./slices/postsSlice";
+import messagesSlice from "./slices/messagesSlice";
 
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
@@ -39,6 +40,7 @@ const rootReducer = combineReducers({
   user: userSlice,
   users: usersSlice,
   posts: postsSlice,
+  messages: messagesSlice,
   persistInfos: persistSlice,
 });
 

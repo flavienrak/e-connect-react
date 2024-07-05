@@ -6,6 +6,7 @@ import App from "./App.jsx";
 import UidContextProvider from "./context/UidContext.jsx";
 import ReduxProvider from "./redux/ReduxProvider.jsx";
 import ThemeContextProvider from "./context/ThemeContext.jsx";
+import SocketContextProvider from "./context/SocketContext.jsx";
 
 import { BrowserRouter as Router } from "react-router-dom";
 
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Router>
         <ThemeContextProvider>
           <UidContextProvider>
-            <App />
+            <SocketContextProvider>
+              <App />
+            </SocketContextProvider>
           </UidContextProvider>
         </ThemeContextProvider>
       </Router>

@@ -63,7 +63,7 @@ export default function Home() {
                   <Center />
                 )}
               </div>
-              <div className="hidden md:block md:w-60"></div>
+              <div className="hidden lg:block md:w-60"></div>
             </div>
           </div>
         </div>

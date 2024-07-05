@@ -1,31 +1,45 @@
 import EmojiPicker from "emoji-picker-react";
 import toast from "react-hot-toast";
 import qs from "query-string";
+import ProfilImg from "../Profil/ProfilImg";
 
 import { useContext, useEffect, useRef, useState } from "react";
 import { isEmpty } from "../../lib/allFunctions";
 import { IoImageOutline } from "react-icons/io5";
 import { BsEmojiSmile } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
-import { format } from "timeago.js";
 import { UidContext } from "../../context/UidContext";
 import { addOnePostInfos } from "../../redux/slices/postsSlice";
-import { FaUser } from "react-icons/fa";
+import { SocketContext } from "../../context/SocketContext";
 
 export default function Postpub() {
-  const { apiUrl, toastStyle, profilImg, path, currentQuery } =
-    useContext(UidContext);
   const { user } = useSelector((state) => state.user);
   const { mode } = useSelector((state) => state.persistInfos);
+  const { socket } = useContext(SocketContext);
+  const { apiUrl, toastStyle, path, currentQuery } = useContext(UidContext);
 
   const textarea = useRef(null);
   const emoji = useRef(null);
+  const emojiContainer = useRef(null);
   const dispatch = useDispatch();
 
   const [message, setMessage] = useState("");
   const [image, setImage] = useState("");
   const [file, setFile] = useState(null);
   const [showEmoji, setShowEmoji] = useState(false);
+
+  useEffect(() => {
+    if (socket) {
+      const createPost = (post) => {
+        // dispatch(updateCommentsPostInfos({ post }));
+      };
+
+      socket.on("createPost", createPost);
+      return () => {
+        socket.off("createPost", createPost);
+      };
+    }
+  }, [socket]);
 
   useEffect(() => {
     if (textarea.current) {
@@ -36,6 +50,19 @@ export default function Postpub() {
 
   useEffect(() => {
     if (showEmoji) {
+      const element = emojiContainer.current;
+      if (element) {
+        const spaceAbove = element.getBoundingClientRect().top;
+
+        if (spaceAbove >= 450) {
+          element.style.top = "auto";
+          element.style.bottom = "2.5rem";
+        } else {
+          element.style.top = "2.5rem";
+          element.style.bottom = "auto";
+        }
+      }
+
       const handleClickOutside = (e) => {
         if (emoji.current && !emoji.current.contains(e.target)) {
           setShowEmoji(false);
@@ -46,7 +73,7 @@ export default function Postpub() {
         document.removeEventListener("click", handleClickOutside);
       };
     }
-  }, [showEmoji]);
+  }, [showEmoji, emojiContainer]);
 
   useEffect(() => {
     if (file) {
@@ -138,7 +165,7 @@ export default function Postpub() {
             }`}
           >
             <BsEmojiSmile size={"1.5rem"} />
-            <div className="absolute top-10 -left-3">
+            <div ref={emojiContainer} className="absolute top-10 -left-3">
               <EmojiPicker
                 onEmojiClick={handleChangeEmoji}
                 theme={mode}
@@ -152,27 +179,13 @@ export default function Postpub() {
           <div className=" flex w-full flex-col gap-2 rounded-xl bg-[var(--bg-primary)] p-4">
             <div className="flex flex-row justify-between">
               <div className="flex flex-row gap-2">
-                {isEmpty(user.image) ? (
-                  <>
-                    <i className="w-10 h-10 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
-                      <FaUser size={"1rem"} />
-                    </i>
-                  </>
-                ) : (
-                  <img
-                    src={profilImg + user.image}
-                    alt="Profile"
-                    className="rounded-full h-9 w-9"
-                  />
-                )}
+                <ProfilImg image={user.image} />
 
                 <div className="flex flex-col justify-center">
                   <p className="font-bold text-[var(--opposite)]">
                     {user.name}
                   </p>
-                  <p className=" text-xs text-gray-400">
-                    {format(Date.now(), "fr")}
-                  </p>
+                  <p className=" text-xs text-gray-400">à l'instant</p>
                 </div>
               </div>
             </div>

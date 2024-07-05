@@ -9,7 +9,7 @@ import { UidContext } from "../../context/UidContext";
 import { IoSearch } from "react-icons/io5";
 import { motion } from "framer-motion";
 import { isEmpty } from "../../lib/allFunctions";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -81,14 +81,17 @@ export default function Navbar() {
     <>
       <div className="fixed z-10 w-full bg-[var(--bg-primary)] px-[2%] sm:px-[10%] py-2">
         <div className="flex w-full h-full">
-          <h1 className="flex items-center gap-2 w-max sm:w-1/5">
+          <Link
+            to={"/home?path=accueil"}
+            className="flex items-center gap-2 w-max sm:w-1/5"
+          >
             <p className="flex justify-center items-center bg-[var(--primary-color)] font-extrabold h-10 w-12 min-w-12 rounded-3xl text-[var(--white)] text-4xl pb-1">
               e
             </p>
             <span className="font-bold text-2xl text-[var(--primary-color)] hidden sm:block">
               Connect
             </span>
-          </h1>
+          </Link>
 
           <div className="flex flex-1 sm:flex-auto w-3/5 items-center justify-center px-10">
             <div className="flex w-full relative items-center">

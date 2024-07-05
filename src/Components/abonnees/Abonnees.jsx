@@ -1,24 +1,41 @@
 import Ajouter from "../Droite/Ajouter";
 
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useContext, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { isEmpty } from "../../lib/allFunctions";
+import { SocketContext } from "../../context/SocketContext";
+import { updateUserInfos } from "../../redux/slices/userSlice";
 
 export default function Abonnees() {
   const { user } = useSelector((state) => state.user);
   const { users } = useSelector((state) => state.users);
+  const { socket } = useContext(SocketContext);
+  const dispatch = useDispatch();
 
   const [followers, setFollowers] = useState([]);
 
   useEffect(() => {
-    if (users) {
-      setFollowers(
-        users.filter(
-          (item) => item._id !== user._id && user.followers.includes(item._id)
-        )
-      );
+    if (socket) {
+      const followed = (followers) => {
+        dispatch(updateUserInfos({ user: { followers } }));
+      };
+
+      socket.on("followed", followed);
+      return () => {
+        socket.off("followed", followed);
+      };
     }
-  }, [users]);
+  }, [socket]);
+
+  useEffect(() => {
+    if (!isEmpty(users)) {
+      const allFollowers = users.filter(
+        (item) => item._id !== user._id && user.followers.includes(item._id)
+      );
+
+      setFollowers(allFollowers);
+    }
+  }, [users, user?.followers]);
 
   return (
     <div className="mt-6 w-full">
@@ -26,14 +43,14 @@ export default function Abonnees() {
       <div className="flex flex-col gap-6">
         <div className="px-4 h-14 flex justify-center items-center rounded-xl bg-[var(--bg-primary)]">
           <p className="text-[var(--primary-color)] font-semibold text-lg">
-            Abonnees (<span>{user.followers.length}</span>)
+            Abonnées (<span>{user.followers.length}</span>)
           </p>
         </div>
 
         {!isEmpty(followers) ? (
-          <div className="w-full">
+          <div className="grid grid-cols-2 gap-2">
             {followers.map((item) => (
-              <div key={item._id} className="grid grid-cols-2 gap-2">
+              <div key={item._id} className="w-full">
                 <Ajouter
                   user={item}
                   isFollowed={user.followed.includes(item._id)}

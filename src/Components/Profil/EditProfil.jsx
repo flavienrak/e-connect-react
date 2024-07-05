@@ -1,4 +1,5 @@
 import toast from "react-hot-toast";
+import ProfilImg from "./ProfilImg";
 
 import { useContext, useEffect, useState } from "react";
 import { AiFillEdit } from "react-icons/ai";
@@ -7,16 +8,15 @@ import { isEmpty } from "../../lib/allFunctions";
 import { UidContext } from "../../context/UidContext";
 import { updateUserInfos } from "../../redux/slices/userSlice";
 import { IoCamera } from "react-icons/io5";
-import { FaUser } from "react-icons/fa";
 
 export default function EditProfil() {
   const { user } = useSelector((state) => state.user);
-  const { apiUrl, toastStyle, profilImg } = useContext(UidContext);
+  const { apiUrl, toastStyle } = useContext(UidContext);
 
   const dispatch = useDispatch();
 
   const [name, setName] = useState({ value: user.name || "", valid: false });
-  const [image, setImage] = useState(profilImg + user.image || "");
+  const [image, setImage] = useState(!isEmpty(user.image) ? user.image : "");
   const [file, setFile] = useState(null);
   const [editProfil, setEditProfil] = useState(false);
 
@@ -97,17 +97,7 @@ export default function EditProfil() {
       {editProfil && (
         <div className="flex w-full gap-4">
           <div className="relative flex gap-4 flex-col items-center">
-            {isEmpty(image) ? (
-              <i className="w-28 h-28 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
-                <FaUser size={"3rem"} />
-              </i>
-            ) : (
-              <img
-                src={image}
-                alt="Profile"
-                className="w-28 h-28 min-w-28 object-cover rounded-full"
-              />
-            )}
+            <ProfilImg image={image} />
 
             <label
               htmlFor="file"
@@ -125,6 +115,7 @@ export default function EditProfil() {
               />
             </label>
           </div>
+
           <div className="flex-1 flex gap-2 flex-col justify-center">
             <input
               type="text"

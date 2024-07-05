@@ -1,57 +1,81 @@
 import qs from "query-string";
+import ProfilImg from "../Profil/ProfilImg";
 
 import { useContext, useEffect, useState } from "react";
-import { TbHome2, TbMessage, TbNewSection } from "react-icons/tb";
-import { LuBell, LuSettings } from "react-icons/lu";
-import { Link } from "react-router-dom";
+import { TbHome2, TbNewSection } from "react-icons/tb";
+import { LuHeart, LuSettings } from "react-icons/lu";
+import { Link, useNavigate } from "react-router-dom";
 import { AiOutlineUser } from "react-icons/ai";
 import { UidContext } from "../../context/UidContext";
-import { BsPostcard } from "react-icons/bs";
-import { FaRegHeart, FaUser } from "react-icons/fa";
-import { HiOutlineUserGroup } from "react-icons/hi";
+import { HiOutlineUserGroup, HiOutlineWindow } from "react-icons/hi2";
 import { useSelector } from "react-redux";
 import { PiShareNetwork } from "react-icons/pi";
 import { isEmpty } from "../../lib/allFunctions";
+import { FiMessageSquare } from "react-icons/fi";
+import { SlBell } from "react-icons/sl";
 
 const menuItems = [
-  { label: "Accueil", path: "accueil", icon: <TbHome2 size={"1.5rem"} /> },
-  { label: "Messages", path: "message", icon: <TbMessage size={"1.5rem"} /> },
-  { label: "Postes", path: "poste", icon: <BsPostcard size={"1.5rem"} /> },
   {
-    label: "Suggestions",
-    path: "suggestion",
-    icon: <HiOutlineUserGroup size={"1.5rem"} />,
+    label: "Accueil",
+    path: "accueil",
+    icon: <TbHome2 size={"1.5rem"} />,
+    notified: true,
+  },
+  {
+    label: "Messages",
+    path: "message",
+    icon: <FiMessageSquare size={"1.5rem"} />,
+    notified: true,
+  },
+  {
+    label: "Postes",
+    path: "poste",
+    icon: <HiOutlineWindow size={"1.5rem"} />,
+    notified: true,
   },
   {
     label: "Suivies",
     path: "suivie",
-    icon: <FaRegHeart size={"1.5rem"} />,
-  },
-  {
-    label: "Abonnees",
-    path: "abonnee",
-    icon: <PiShareNetwork size={"1.5rem"} />,
+    icon: <LuHeart size={"1.35rem"} />,
+    notified: true,
   },
   {
     label: "Notifications",
     path: "notification",
-    icon: <LuBell size={"1.5rem"} />,
+    icon: <SlBell size={"1.4rem"} />,
+    notified: true,
+  },
+  {
+    label: "Abonnées",
+    path: "abonnee",
+    icon: <PiShareNetwork size={"1.5rem"} />,
+    notified: true,
+  },
+  {
+    label: "Suggestions",
+    path: "suggestion",
+    icon: <HiOutlineUserGroup size={"1.5rem"} />,
+    notified: true,
   },
   {
     label: "Profil",
     path: "profil",
     icon: <AiOutlineUser size={"1.5rem"} />,
+    notified: true,
   },
   {
-    label: "Parametres",
+    label: "Paramètres",
     path: "setting",
     icon: <LuSettings size={"1.5rem"} />,
+    notified: false,
   },
 ];
 
 export default function Gauche() {
-  const { currentQuery, path, profilImg } = useContext(UidContext);
+  const { currentQuery, path, refetchPost } = useContext(UidContext);
   const { user } = useSelector((state) => state.user);
+
+  const push = useNavigate();
 
   const [actualLink, setActualLink] = useState(
     "/home?path=accueil&active=create-post"
@@ -70,6 +94,8 @@ export default function Gauche() {
         { skipNull: true }
       );
       setActualLink(url);
+    } else {
+      push("/home?path=accueil");
     }
   }, [currentQuery?.path]);
 
@@ -77,20 +103,11 @@ export default function Gauche() {
     <>
       <div className="fixed w-full h-full left-[2%] sm:left-[10%] top-20 pointer-events-none">
         <div className="flex w-16 flex-col gap-6  pointer-events-auto lg:w-60">
-          <div className="flex gap-4 rounded-lg bg-[var(--bg-primary)] h-14 items-center px-2 justify-center lg:px-4 lg:justify-start">
-            {isEmpty(user.image) ? (
-              <>
-                <i className="w-10 h-10 min-w-10 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
-                  <FaUser size={"1rem"} />
-                </i>
-              </>
-            ) : (
-              <img
-                src={profilImg + user.image}
-                alt="Profile"
-                className="rounded-full h-10 w-10 min-w-10 object-cover"
-              />
-            )}
+          <Link
+            to={"/home?path=profil"}
+            className="flex gap-4 rounded-lg bg-[var(--bg-primary)] h-14 items-center px-2 justify-center lg:px-4 lg:justify-start"
+          >
+            <ProfilImg online={true} image={user.image} />
             <div className="overflow-hidden hidden lg:block">
               <div className="font-semibold text-[var(--opposite)]">
                 {user.name}
@@ -99,7 +116,7 @@ export default function Gauche() {
                 {user.email}
               </p>
             </div>
-          </div>
+          </Link>
 
           <div className="flex w-full flex-col overflow-hidden rounded-xl bg-[var(--bg-primary)]">
             <div className="flex w-full flex-col items-center justify-center gap-1 ">
@@ -107,9 +124,16 @@ export default function Gauche() {
                 <Link
                   key={item.path}
                   to={`/home?path=${item.path}`}
+                  onClick={() => {
+                    if (item.path === menuItems[0].path) {
+                      refetchPost();
+                    }
+                  }}
                   className={`relative flex w-full gap-4 cursor-pointer border-l-4 h-12 items-center px-4 
                     ${
-                      currentQuery?.path === item.path
+                      currentQuery?.path === item.path ||
+                      (item.path === menuItems[0].path &&
+                        isEmpty(currentQuery?.path))
                         ? "border-[var(--primary-color)] bg-[var(--bg-secondary)] text-[var(--primary-color)]"
                         : "hover:text-[var(--primary-color)] border-transparent text-[var(--opposite)]"
                     }
@@ -119,11 +143,21 @@ export default function Gauche() {
                   <p className="font-semibold w-max hidden lg:block">
                     {item.label}
                   </p>
-                  {/* <div className="absolute left-7 top-2 border-2 border-[var(--white)] flex size-5 items-center justify-center rounded-full bg-[var(--red-color)] font-bold text-[var(--white-color)]">
-                    <p className="text-xs flex justify-center items-center">
-                      1
-                    </p>
-                  </div> */}
+                  {/* {item.notified && (
+                    <div
+                      className={`absolute left-7 top-2 border-2 flex size-5 items-center justify-center rounded-full bg-[var(--red-color)] font-bold text-[var(--white-color)] ${
+                        currentQuery?.path === item.path ||
+                        (item.path === menuItems[0].path &&
+                          isEmpty(currentQuery?.path))
+                          ? "border-[var(--bg-secondary)]"
+                          : "border-[var(--bg-primary)]"
+                      }`}
+                    >
+                      <p className="text-xs flex justify-center items-center">
+                        1
+                      </p>
+                    </div>
+                  )} */}
                 </Link>
               ))}
             </div>

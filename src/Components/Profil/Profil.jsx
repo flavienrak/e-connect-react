@@ -2,6 +2,7 @@ import SingleProfil from "./SingleProfil";
 import Cardpost from "../Centre/Cardpost";
 import Ajouter from "../Droite/Ajouter";
 import EditProfil from "./EditProfil";
+import ListView from "./ListView";
 
 import { useContext, useState } from "react";
 import { useSelector } from "react-redux";
@@ -14,6 +15,7 @@ export default function Profil() {
   const { users } = useSelector((state) => state.users);
   const { userId } = useContext(UidContext);
 
+  const [views, setViews] = useState(false);
   const [items, setItems] = useState([
     {
       label: "Publication",
@@ -44,79 +46,104 @@ export default function Profil() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <SingleProfil
-            user={user}
-            items={items}
-            active={active}
-            setActive={setActive}
-            setItems={setItems}
-          />
-          <EditProfil />
-
-          {!isEmpty(user?.posts) && active === items[0].active && (
-            <>
-              {user.posts.map((item) => {
-                const actualPost = posts.find((p) => p._id === item);
-                const actualUser = users.find(
-                  (us) => us._id === actualPost.senderId
-                );
-
-                if (!isEmpty(actualUser) && !isEmpty(actualPost))
-                  return (
-                    <div key={item} className="w-full h-full">
-                      <Cardpost
-                        isOwn={actualUser._id === userId}
-                        sender={actualUser}
-                        post={actualPost}
-                      />
-                    </div>
-                  );
-              })}
-            </>
-          )}
-
-          {!isEmpty(user?.followed) && active === items[1].active && (
-            <>
-              {user.followed.map((item) => {
+        {views ? (
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor=""
+              className="font-semibold p-2 text-[var(--opposite)]"
+            >
+              Vues
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {user.views.map((item) => {
                 const actualUser = users.find((us) => us._id === item);
+
                 if (!isEmpty(actualUser))
                   return (
-                    <div
-                      key={item._id}
-                      className="w-full grid grid-cols-2 gap-2"
-                    >
-                      <Ajouter
-                        user={actualUser}
-                        isFollowed={user.followed.includes(actualUser._id)}
-                      />
+                    <div className="w-full">
+                      <ListView user={actualUser} />
                     </div>
                   );
               })}
-            </>
-          )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <SingleProfil
+              user={user}
+              items={items}
+              active={active}
+              views={views}
+              setActive={setActive}
+              setItems={setItems}
+              setViews={setViews}
+            />
+            <EditProfil />
 
-          {!isEmpty(user?.followers) && active === items[2].active && (
-            <>
-              {user.followers.map((item) => {
-                const actualUser = users.find((us) => us._id === item);
-                if (!isEmpty(actualUser))
-                  return (
-                    <div
-                      key={item._id}
-                      className="w-full grid grid-cols-2 gap-2"
-                    >
-                      <Ajouter
-                        user={actualUser}
-                        isFollowed={user.followed.includes(item._id)}
-                      />
-                    </div>
+            {!isEmpty(user?.posts) && active === items[0].active && (
+              <>
+                {user.posts.map((item) => {
+                  const actualPost = posts.find((p) => p._id === item);
+                  const actualUser = users.find(
+                    (us) => us._id === actualPost?.senderId
                   );
-              })}
-            </>
-          )}
-          <br />
-        </div>
+
+                  if (!isEmpty(actualUser) && !isEmpty(actualPost))
+                    return (
+                      <div key={item} className="w-full h-full">
+                        <Cardpost
+                          isOwn={actualUser._id === userId}
+                          sender={actualUser}
+                          post={actualPost}
+                        />
+                      </div>
+                    );
+                })}
+              </>
+            )}
+
+            {!isEmpty(user?.followed) && active === items[1].active && (
+              <>
+                {user.followed.map((item) => {
+                  const actualUser = users.find((us) => us._id === item);
+                  if (!isEmpty(actualUser))
+                    return (
+                      <div
+                        key={item._id}
+                        className="w-full grid grid-cols-2 gap-2"
+                      >
+                        <Ajouter
+                          user={actualUser}
+                          isFollowed={user.followed.includes(actualUser._id)}
+                        />
+                      </div>
+                    );
+                })}
+              </>
+            )}
+
+            {!isEmpty(user?.followers) && active === items[2].active && (
+              <>
+                {user.followers.map((item) => {
+                  const actualUser = users.find((us) => us._id === item);
+                  if (!isEmpty(actualUser))
+                    return (
+                      <div
+                        key={item._id}
+                        className="w-full grid grid-cols-2 gap-2"
+                      >
+                        <Ajouter
+                          user={actualUser}
+                          isFollowed={user.followed.includes(item._id)}
+                        />
+                      </div>
+                    );
+                })}
+              </>
+            )}
+            <br />
+          </div>
+        )}
       </div>
     </div>
   );

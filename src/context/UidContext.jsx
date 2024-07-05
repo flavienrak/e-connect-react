@@ -11,17 +11,31 @@ import { updatePersistInfos } from "../redux/slices/persistSlice";
 import { fetchUserInfos } from "../redux/slices/userSlice";
 import { fetchPostsInfos } from "../redux/slices/postsSlice";
 import { register } from "timeago.js";
-import { format } from "date-fns";
+import { differenceInCalendarDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { fetchUsers } from "../redux/slices/usersSlice";
+import { fetchMessagesInfos } from "../redux/slices/messagesSlice";
 
 register("fr", frLocale);
 
 const apiUrl = "http://localhost:8000/api";
-const profilImg = "http://localhost:8000/uploads/profile/";
-const postImg = "http://localhost:8000/uploads/post/";
+const profilUrl = "http://localhost:8000/uploads/profile/";
+const postUrl = "http://localhost:8000/uploads/post/";
 
 export const UidContext = createContext();
+
+const formatDate = (date) => {
+  const messageDate = new Date(date);
+  const isToday = differenceInCalendarDays(new Date(), messageDate) === 0;
+
+  if (isToday) {
+    return format(date, "HH:mm");
+  } else {
+    return `${format(date, "d", { locale: fr })} ${format(date, "MMMM", {
+      locale: fr,
+    })} - ${format(date, "HH:mm")}`;
+  }
+};
 
 export default function UidContextProvider({ children }) {
   const location = useLocation();
@@ -29,12 +43,16 @@ export default function UidContextProvider({ children }) {
   const dispatch = useDispatch();
 
   const { authToken } = useSelector((state) => state.persistInfos);
+  const { posts } = useSelector((state) => state.posts);
 
   const [currentQuery, setCurrentQuery] = useState({});
   const [showLogout, setShowLogout] = useState(false);
   const [userId, setUserId] = useState(null);
   const [getUsers, setGetUsers] = useState(false);
   const [getPosts, setGetPosts] = useState(false);
+  const [getMessages, setGetMessages] = useState(false);
+
+  const [loadPost, setLoadPost] = useState(false);
 
   useEffect(() => {
     const newParams = qs.parse(location.search);
@@ -46,12 +64,6 @@ export default function UidContextProvider({ children }) {
       push("/home?path=accueil");
     }
   }, [location.pathname]);
-
-  useEffect(() => {
-    if (isEmpty(currentQuery?.path)) {
-      push("/home?path=accueil");
-    }
-  }, [currentQuery?.path]);
 
   useEffect(() => {
     if (!isEmpty(authToken)) {
@@ -115,22 +127,43 @@ export default function UidContextProvider({ children }) {
   }, [getUsers]);
 
   useEffect(() => {
-    if (getPosts) {
+    if (getPosts || currentQuery?.path === "accueil") {
       (async () => {
-        const res = await fetch(`${apiUrl}/post/get-all`).then((res) =>
-          res.json()
+        setLoadPost(true);
+        const res = await fetch(`${apiUrl}/post/${userId}/get-all`).then(
+          (res) => res.json()
         );
+
+        if (!isEmpty(posts)) {
+          setTimeout(() => {
+            setLoadPost(false);
+          }, 2000);
+        } else {
+          setLoadPost(false);
+        }
 
         if (res?.posts) {
           dispatch(fetchPostsInfos({ posts: res.posts }));
+          setGetMessages(true);
+          setGetPosts(false);
         }
       })();
     }
   }, [getPosts]);
 
-  const formatDate = (date) => {
-    return format(date, "dd MMMM yyyy", { locale: fr });
-  };
+  useEffect(() => {
+    if (getMessages) {
+      (async () => {
+        const res = await fetch(`${apiUrl}/message/${userId}/get-all`).then(
+          (res) => res.json()
+        );
+
+        if (res?.messages) {
+          dispatch(fetchMessagesInfos({ messages: res.messages }));
+        }
+      })();
+    }
+  }, [getMessages]);
 
   const toastStyle = {
     style: {
@@ -149,6 +182,10 @@ export default function UidContextProvider({ children }) {
     setShowLogout(value);
   };
 
+  const refetchPost = () => {
+    setGetPosts(true);
+  };
+
   return (
     <UidContext.Provider
       value={{
@@ -157,9 +194,12 @@ export default function UidContextProvider({ children }) {
         toastStyle,
         showLogout,
         currentQuery,
-        profilImg,
-        postImg,
+        profilUrl,
+        postUrl,
+        loadPost,
         path: location.pathname,
+        formatDate,
+        refetchPost,
         loginOut,
         formatDate,
       }}

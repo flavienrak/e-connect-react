@@ -8,6 +8,10 @@ export function isEmpty(value) {
   );
 }
 
+export const escapeRegExp = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 export function isValidNumber(value) {
   return !isNaN(value) && isFinite(value);
 }

@@ -7,20 +7,18 @@ const usersSlice = createSlice({
   reducers: {
     fetchUsers: (state, action) => {
       const { users } = action.payload;
-      let newState = { ...state };
-      newState.users = users;
-      return newState;
+      state.users = users;
     },
     updateUsers: (state, action) => {
       const { users } = action.payload;
-      let newState = { ...state };
-      let existingUserIds = new Set(newState.users.map((user) => user._id));
-      let uniqueUsers = users.filter((user) => !existingUserIds.has(user._id));
-      newState.users = [...newState.users, ...uniqueUsers];
-      return newState;
+      const existingUserIds = new Set(state.users.map((user) => user._id));
+      const uniqueUsers = users.filter(
+        (user) => !existingUserIds.has(user._id)
+      );
+      state.users.push(...uniqueUsers);
     },
     removeUsers: () => {
-      return initialState;
+      state = initialState;
     },
   },
 });

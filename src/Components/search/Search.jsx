@@ -8,23 +8,25 @@ import { isEmpty } from "../../lib/allFunctions";
 import { UidContext } from "../../context/UidContext";
 
 export default function Search() {
+  const { posts } = useSelector((state) => state.posts);
+  const { users } = useSelector((state) => state.users);
   const { user } = useSelector((state) => state.user);
   const { apiUrl, userId, currentQuery } = useContext(UidContext);
 
   const [noResults, setNoResults] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [messages, setMessages] = useState([]);
-
+  const [userResult, setUserResult] = useState([]);
+  const [postResult, setPostResult] = useState([]);
+  const [messageResult, setMessageResult] = useState([]);
+  const [userPosts, setUserPosts] = useState([]);
   const [items, setItems] = useState([
-    {
-      label: "Utilisateur",
-      active: "users",
-      number: 0,
-    },
     {
       label: "Post",
       active: "posts",
+      number: 0,
+    },
+    {
+      label: "Utilisateur",
+      active: "users",
       number: 0,
     },
     {
@@ -49,9 +51,9 @@ export default function Search() {
         }).then((res) => res.json());
 
         if (res?.results) {
-          setUsers(res.results.users || []);
-          setPosts(res.results.posts || []);
-          setMessages(res.results.messages || []);
+          setUserResult(res.results.users);
+          setPostResult(res.results.posts);
+          setMessageResult(res.results.messages);
 
           const hasResults =
             res.results.users.length > 0 ||
@@ -65,45 +67,46 @@ export default function Search() {
   }, [currentQuery?.search]);
 
   useEffect(() => {
-    if (!isEmpty(users || !isEmpty(posts) || !isEmpty(messages))) {
-      setItems((prev) => {
-        let newState = [...prev];
-
-        if (!isEmpty(users)) {
-          newState.forEach((item, index) => {
-            if (item.active === items[0].active) {
-              newState[index] = {
-                ...newState[index],
-                number: users.length,
-              };
-            }
-          });
-        }
-        if (!isEmpty(posts)) {
-          newState.forEach((item, index) => {
-            if (item.active === items[1].active) {
-              newState[index] = {
-                ...newState[index],
-                number: posts.length,
-              };
-            }
-          });
-        }
-        if (!isEmpty(messages)) {
-          newState.forEach((item, index) => {
-            if (item.active === items[2].active) {
-              newState[index] = {
-                ...newState[index],
-                number: messages.length,
-              };
-            }
-          });
-        }
-
-        return newState;
-      });
+    if (!isEmpty(posts) && !isEmpty(postResult)) {
+      const postIds = postResult.map((item) => item._id);
+      setUserPosts(posts.filter((item) => postIds.includes(item._id)));
     }
-  }, [users, posts, messages]);
+  }, [posts, postResult]);
+
+  useEffect(() => {
+    if (!isEmpty(postResult)) {
+      if (active !== items[0].active) {
+        setActive(items[0].active);
+      }
+    } else if (!isEmpty(userResult)) {
+      if (active !== items[1].active) {
+        setActive(items[1].active);
+      }
+    } else if (!isEmpty(messageResult)) {
+      if (active !== items[2].active) {
+        setActive(items[2].active);
+      }
+    }
+
+    setItems((prev) => {
+      let newState = [...prev];
+
+      newState = newState.map((item) => {
+        if (item.active === items[0].active) {
+          return { ...item, number: postResult.length };
+        }
+        if (item.active === items[1].active) {
+          return { ...item, number: userResult.length };
+        }
+        if (item.active === items[2].active) {
+          return { ...item, number: messageResult.length };
+        }
+        return item;
+      });
+
+      return newState;
+    });
+  }, [userResult, postResult, messageResult]);
 
   return (
     <div className="mt-6 w-full">
@@ -118,25 +121,18 @@ export default function Search() {
         {!noResults ? (
           <>
             <div className="flex items-center gap-4 pl-12 bg-[var(--bg-primary)] p-4 rounded-xl">
-              <ProfilMenu items={items} active={active} setActive={setActive} />
+              <ProfilMenu
+                isOwn={true}
+                userId={user._id}
+                items={items}
+                active={active}
+                setActive={setActive}
+              />
             </div>
 
-            {!isEmpty(users) && active === items[0].active && (
+            {!isEmpty(postResult) && active === items[0].active && (
               <>
-                {users.map((item) => (
-                  <div key={item._id} className="w-full grid grid-cols-2 gap-2">
-                    <Ajouter
-                      user={item}
-                      isFollowed={user.followed.includes(item._id)}
-                    />
-                  </div>
-                ))}
-              </>
-            )}
-
-            {!isEmpty(posts) && active === items[1].active && (
-              <>
-                {posts.map((item) => {
+                {userPosts.map((item) => {
                   const actualUser = users.find(
                     (us) => us._id === item.senderId
                   );
@@ -155,7 +151,25 @@ export default function Search() {
               </>
             )}
 
-            {!isEmpty(messages) && active === items[2].active && <>Messages</>}
+            {!isEmpty(userResult) && active === items[1].active && (
+              <>
+                <div className="w-full grid grid-cols-2 gap-2">
+                  {userResult.map((item) => (
+                    <div key={item._id} className="w-full">
+                      <Ajouter
+                        user={item}
+                        isFollowed={user.followed.includes(item._id)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {!isEmpty(messageResult) && active === items[2].active && (
+              <>Messages</>
+            )}
+            <br />
           </>
         ) : (
           <p className="text-[var(--opposite)] text-center text-sm flex justify-center items-center py-4 opacity-50">

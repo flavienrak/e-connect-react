@@ -10,43 +10,30 @@ const postsSlice = createSlice({
   reducers: {
     fetchPostsInfos: (state, action) => {
       const { posts } = action.payload;
-      let newState = { ...state };
-      newState.posts = posts;
-      return newState;
+      state.posts = posts;
     },
     addOnePostInfos: (state, action) => {
       const { post } = action.payload;
-      let newState = { ...state };
-      newState.posts = [post, ...newState.posts];
-      return newState;
+      state.posts = [post, ...state.posts];
     },
     removeOnePostInfos: (state, action) => {
       const { post } = action.payload;
-      let newState = { ...state };
-      const newInfos = newState.posts.filter((item) => item._id !== post._id);
-      newState.posts = newInfos;
-      return newState;
+      state.posts = state.posts.filter((item) => item._id !== post._id);
     },
     updateLikesPostInfos: (state, action) => {
       const { post } = action.payload;
-      let newState = { ...state };
-      const newInfos = newState.posts.map((item) =>
+      state.posts = state.posts.map((item) =>
         item._id === post._id ? { ...item, likes: post.likes } : item
       );
-      newState.posts = newInfos;
-      return newState;
     },
     updateCommentsPostInfos: (state, action) => {
       const { post } = action.payload;
-      let newState = { ...state };
-      const newInfos = newState.posts.map((item) =>
+      state.posts = state.posts.map((item) =>
         item._id === post._id ? { ...item, comments: post.comments } : item
       );
-      newState.posts = newInfos;
-      return newState;
     },
     removePostsInfos: () => {
-      return initialState;
+      state = initialState;
     },
   },
 });

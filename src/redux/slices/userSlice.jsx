@@ -9,18 +9,14 @@ const userSlice = createSlice({
   reducers: {
     fetchUserInfos: (state, action) => {
       const { user } = action.payload;
-      let newState = { ...state };
-      newState.user = user;
-      return newState;
+      state.user = user;
     },
     updateUserInfos: (state, action) => {
       const { user } = action.payload;
-      let newState = { ...state };
-      newState.user = { ...newState.user, ...user };
-      return newState;
+      state.user = { ...state.user, ...user };
     },
     removeUserInfos: () => {
-      return initialState;
+      state = initialState;
     },
   },
 });

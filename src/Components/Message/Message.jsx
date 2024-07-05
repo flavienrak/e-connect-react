@@ -1,57 +1,58 @@
-import { FaUser } from "react-icons/fa";
-import { isEmpty } from "../../lib/allFunctions";
-
 import SingleMessage from "./SingleMessage";
+import NouveauMessage from "./NouveauMessage";
+import UserMessage from "./UserMessage";
+
+import { isEmpty } from "../../lib/allFunctions";
+import { useSelector } from "react-redux";
+import { useContext } from "react";
+import { UidContext } from "../../context/UidContext";
 
 export default function Message() {
-  const pdp = "";
+  const { users } = useSelector((state) => state.users);
+  const { messages } = useSelector((state) => state.messages);
+  const { currentQuery } = useContext(UidContext);
 
   return (
     <div className="mt-6 w-full">
       <div />
-      <div className="flex w-full flex-col gap-6">
-        <div className="px-4 h-14 flex justify-center items-center rounded-xl bg-[var(--bg-primary)]">
-          <p className="text-[var(--primary-color)] font-semibold text-lg">
-            Messages (<span>9</span>)
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className="relative bg-[var(--bg-primary)] flex rounded-xl p-4 gap-2 items-center cursor-pointer">
-            <div className="flex justify-center items-center gap-2">
-              <div className="relative w-10 h-full min-w-10">
-                {isEmpty(pdp) ? (
-                  <i className="w-10 h-10 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
-                    <FaUser size={"1rem"} />
-                  </i>
-                ) : (
-                  <img
-                    src={pdp}
-                    alt="Profile"
-                    className="rounded-full object-cover w-10 h-10"
-                  />
-                )}
-              </div>
-              <div className="flex items-center min-h-full">
-                <p className="pr-10 flex justify-center flex-col">
-                  <span className="font-semibold text-[var(--opposite)]">
-                    Flavien RAK
-                  </span>
-                  <span className="text-sm line-clamp-1 text-[var(--opposite)] opacity-80 font-light">
-                    Bonjour !
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-400 absolute top-5 right-5">
-              10h:10
+      {!isEmpty(currentQuery?.user) ? (
+        <SingleMessage />
+      ) : (
+        <div className="flex w-full flex-col gap-6">
+          <div className="px-4 h-14 flex justify-center items-center rounded-xl bg-[var(--bg-primary)]">
+            <p className="text-[var(--primary-color)] font-semibold text-lg">
+              Messages (<span>{messages.length}</span>)
             </p>
           </div>
-        </div>
 
-        {/* <SingleMessage /> */}
-      </div>
+          <NouveauMessage />
+
+          {!isEmpty(messages) ? (
+            <>
+              <div className="w-full grid grid-cols-1 gap-2 flex-wrap xl:grid-cols-2">
+                {messages.map((item) => {
+                  const actualUser = users.find((us) => us._id === item.userId);
+                  const actualMessages = item.messages;
+
+                  if (!isEmpty(actualUser) && !isEmpty(actualMessages))
+                    return (
+                      <div key={actualUser._id} className="w-full">
+                        <UserMessage
+                          message={actualMessages[actualMessages.length - 1]}
+                          user={actualUser}
+                        />
+                      </div>
+                    );
+                })}
+              </div>
+            </>
+          ) : (
+            <p className="text-[var(--opposite)] text-center text-sm flex justify-center items-center py-4 opacity-50">
+              {`< Aucun message pour le moment >`}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

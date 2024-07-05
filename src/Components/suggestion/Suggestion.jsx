@@ -34,14 +34,16 @@ export default function Suggestions() {
         </div>
         {!isEmpty(suggestUsers) ? (
           <>
-            {suggestUsers.map((item) => (
-              <div key={item._id} className="w-full grid grid-cols-2 gap-2">
-                <Ajouter
-                  user={item}
-                  isFollowed={user.followed.includes(item._id)}
-                />
-              </div>
-            ))}
+            <div className="w-full grid grid-cols-2 gap-2">
+              {suggestUsers.map((item) => (
+                <div key={item._id} className="w-full">
+                  <Ajouter
+                    user={item}
+                    isFollowed={user.followed.includes(item._id)}
+                  />
+                </div>
+              ))}
+            </div>
           </>
         ) : (
           <p className="text-[var(--opposite)] text-center text-sm flex justify-center items-center py-4 opacity-50">

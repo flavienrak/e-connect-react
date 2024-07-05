@@ -1,19 +1,37 @@
-export default function Messageperso({ pdp, nom, message }) {
+import { useContext } from "react";
+import ProfilImg from "../Profil/ProfilImg";
+
+import { format } from "date-fns";
+import { UidContext } from "../../context/UidContext";
+import { SocketContext } from "../../context/SocketContext";
+
+export default function Messageperso({ user, message }) {
+  const { isOnline } = useContext(SocketContext);
+  const { userId } = useContext(UidContext);
+
   return (
     <>
-      <div className="mt-2 flex cursor-pointer flex-row gap-3">
-        <div className="size-10 rounded-full">
-          <img
-            src={pdp}
-            className="h-10 w-full rounded-full object-cover"
-            alt=""
-          />
-        </div>
-        <div className=" leading-none">
-          <p className="text-sm font-semibold text-[var(--opposite)]">{nom}</p>
-          <p className="text-xs text-[var(--opposite)] opacity-60 font-light">
-            {message}
+      <div className="flex cursor-pointer flex-row gap-3">
+        <ProfilImg
+          online={isOnline(user._id) && user._id !== userId}
+          image={user.image}
+        />
+        <div className="w-full">
+          <p className="text-sm font-semibold text-[var(--opposite)]">
+            {user.name}
           </p>
+          <label className="flex justify-between items-center gap-2">
+            <p
+              className={`flex-1 text-sm line-clamp-1 text-[var(--opposite)] ${
+                message.status === "vue" ? "opacity-80 font-light" : ""
+              }`}
+            >
+              {message.message}
+            </p>
+            <span className="text-xs text-[var(--opposite)] font-semibold">
+              {format(message.updatedAt, "HH:mm")}
+            </span>
+          </label>
         </div>
       </div>
     </>

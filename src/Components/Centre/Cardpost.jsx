@@ -1,10 +1,13 @@
 import EmojiPicker from "emoji-picker-react";
 import toast from "react-hot-toast";
+import qs from "query-string";
+import ProfilImg from "../Profil/ProfilImg";
+import Comment from "../postes/Comment";
 
 import { IoMdHeart } from "react-icons/io";
 import { MdClose } from "react-icons/md";
 import { isEmpty } from "../../lib/allFunctions";
-import { FaCommentAlt, FaRegCommentAlt, FaUser } from "react-icons/fa";
+import { FaCommentAlt, FaRegCommentAlt } from "react-icons/fa";
 import { format } from "timeago.js";
 import { useContext, useEffect, useRef, useState } from "react";
 import { UidContext } from "../../context/UidContext";
@@ -16,17 +19,24 @@ import {
 } from "../../redux/slices/postsSlice";
 import { LuHeart } from "react-icons/lu";
 import { BsEmojiSmile } from "react-icons/bs";
-import { HiOutlineTrash } from "react-icons/hi";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { updateUserInfos } from "../../redux/slices/userSlice";
+import { FaCircleCheck, FaRegCircleCheck } from "react-icons/fa6";
+import { SocketContext } from "../../context/SocketContext";
 
 export default function Cardpost({ sender, post, isOwn }) {
+  const { user } = useSelector((state) => state.user);
   const { mode } = useSelector((state) => state.persistInfos);
-  const { apiUrl, userId, toastStyle, profilImg, postImg } =
+  const { users } = useSelector((state) => state.users);
+  const { isOnline, socket } = useContext(SocketContext);
+  const { apiUrl, userId, toastStyle, postUrl, path, currentQuery } =
     useContext(UidContext);
 
   const emoji = useRef(null);
   const commentTextarea = useRef(null);
   const textarea = useRef(null);
+  const emojiContainer = useRef(null);
   const dispatch = useDispatch();
 
   const [message, setMessage] = useState("");
@@ -36,6 +46,26 @@ export default function Cardpost({ sender, post, isOwn }) {
   const [showComments, setShowComments] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [deletePost, setDeletePost] = useState(false);
+  const [isFollowed, setIsFollowed] = useState(false);
+
+  useEffect(() => {
+    if (socket) {
+      const likePost = (post) => {
+        dispatch(updateLikesPostInfos({ post }));
+      };
+      const commentPost = (post) => {
+        dispatch(updateCommentsPostInfos({ post }));
+      };
+
+      socket.on("likePost", likePost);
+      socket.on("commentPost", commentPost);
+
+      return () => {
+        socket.off("likePost", likePost);
+        socket.off("commentPost", commentPost);
+      };
+    }
+  }, [socket]);
 
   useEffect(() => {
     if (textarea.current) {
@@ -52,7 +82,30 @@ export default function Cardpost({ sender, post, isOwn }) {
   }, [comment]);
 
   useEffect(() => {
+    if (!isEmpty(sender?._id)) {
+      setIsFollowed(
+        user.followed.some(
+          (item) => item === sender._id && sender._id !== userId
+        )
+      );
+    }
+  }, [user?.followed, sender._id]);
+
+  useEffect(() => {
     if (showEmoji) {
+      const element = emojiContainer.current;
+      if (element) {
+        const spaceAbove = element.getBoundingClientRect().top;
+
+        if (spaceAbove >= 450) {
+          element.style.top = "auto";
+          element.style.bottom = "2.5rem";
+        } else {
+          element.style.top = "2.5rem";
+          element.style.bottom = "auto";
+        }
+      }
+
       const handleClickOutside = (e) => {
         if (emoji.current && !emoji.current.contains(e.target)) {
           setShowEmoji(false);
@@ -63,7 +116,21 @@ export default function Cardpost({ sender, post, isOwn }) {
         document.removeEventListener("click", handleClickOutside);
       };
     }
-  }, [showEmoji]);
+  }, [showEmoji, emojiContainer]);
+
+  const url = qs.stringifyUrl(
+    {
+      url: path,
+      query: {
+        ...(userId !== sender._id
+          ? { path: currentQuery.path }
+          : { path: "profil" }),
+        ...(userId !== sender._id && { active: "view-profil" }),
+        ...(userId !== sender._id && { user: sender._id }),
+      },
+    },
+    { skipNull: true }
+  );
 
   const handleChangeEmoji = (e) => {
     setMessage((prev) => prev + e.emoji);
@@ -74,10 +141,11 @@ export default function Cardpost({ sender, post, isOwn }) {
     const res = await fetch(
       `${apiUrl}/post/${userId}/${post._id}/like-post`
     ).then((res) => res.json());
+    setIsLoading(false);
 
     if (res?.post) {
+      dispatch(updateUserInfos({ user: res.user }));
       dispatch(updateLikesPostInfos({ post: res.post }));
-      setIsLoading(false);
     }
   };
 
@@ -100,8 +168,9 @@ export default function Cardpost({ sender, post, isOwn }) {
       resetComment();
 
       if (res?.post) {
+        dispatch(updateUserInfos({ user: res.user }));
         dispatch(updateCommentsPostInfos({ post: res.post }));
-        toast.success("Commentaire ajoute avec succes", toastStyle);
+        toast.success("Commentaire ajouté", toastStyle);
       }
     }
   };
@@ -109,17 +178,6 @@ export default function Cardpost({ sender, post, isOwn }) {
   const handleEnter = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       handleComment(e);
-    }
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    const res = await fetch(
-      `${apiUrl}/post/${post._id}/${commentId}/delete-comment`
-    ).then((res) => res.json());
-
-    if (res?.post) {
-      dispatch(updateCommentsPostInfos({ post: res.post }));
-      toast.success("Commentaire supprime avec succes", toastStyle);
     }
   };
 
@@ -135,33 +193,78 @@ export default function Cardpost({ sender, post, isOwn }) {
     }
   };
 
+  const handleFollowUser = async () => {
+    const res = await fetch(
+      `${apiUrl}/user/${userId}/${sender._id}/follow-user`
+    ).then((res) => res.json());
+
+    if (res?.user) {
+      if (isFollowed) {
+        toast.success("Désabonée", toastStyle);
+      } else {
+        toast.success("Abonnée", toastStyle);
+      }
+
+      dispatch(updateUserInfos({ user: res.user }));
+    }
+  };
+
+  const handleRejectPost = async () => {
+    const res = await fetch(
+      `${apiUrl}/post/${userId}/${post._id}/reject-post`
+    ).then((res) => res.json());
+
+    if (res?.post) {
+      dispatch(updateUserInfos({ user: res.user }));
+      toast.success("Post supprime", toastStyle);
+    }
+  };
+
   return (
     <>
-      <div className=" flex w-full flex-col gap-2 rounded-xl bg-[var(--bg-primary)] p-4">
+      <div className="flex w-full flex-col gap-2 rounded-xl bg-[var(--bg-primary)] p-4">
         <div className="flex flex-row justify-between">
           <div className="flex flex-row gap-2">
-            {isEmpty(sender.image) ? (
-              <i className="w-10 h-10 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
-                <FaUser size={"1rem"} />
-              </i>
-            ) : (
-              <img
-                src={profilImg + sender.image}
-                className="rounded-full object-cover h-10 w-10"
-                alt=""
+            <Link to={url}>
+              <ProfilImg
+                online={isOnline(sender._id) && sender._id !== userId}
+                image={sender.image}
               />
-            )}
+            </Link>
 
             <div className="">
-              <p className="font-bold text-[var(--opposite)]">{sender.name}</p>
+              <p className="font-bold text-[var(--opposite)] flex items-center gap-2">
+                {sender.name}{" "}
+                {sender._id !== userId && (
+                  <>
+                    <span
+                      onClick={handleFollowUser}
+                      className="cursor-pointer hover:text-[var(--primary-color)] opacity-90"
+                    >
+                      {isFollowed ? (
+                        <FaCircleCheck size={"1rem"} />
+                      ) : (
+                        <FaRegCircleCheck size={"1rem"} />
+                      )}
+                    </span>
+                  </>
+                )}
+              </p>
               <p className=" text-xs text-[var(--opposite)] opacity-60 font-light">
                 {format(post.createdAt, "fr")}
               </p>
             </div>
           </div>
-          {isOwn && (
+
+          {!user.rejectedPost.includes(post._id) && (
             <i
-              onClick={() => setDeletePost((prev) => !prev)}
+              onClick={() => {
+                if (isOwn) {
+                  setDeletePost((prev) => !prev);
+                } else {
+                  handleRejectPost();
+                }
+              }}
               className="cursor-pointer"
             >
               <MdClose className="text-slate-400" size={"1.5rem"} />
@@ -170,9 +273,9 @@ export default function Cardpost({ sender, post, isOwn }) {
         </div>
 
         {!isEmpty(post.image) && (
-          <div className=" h-72 w-full rounded-xl">
+          <div className="h-72 w-full rounded-xl">
             <img
-              src={postImg + post.image}
+              src={postUrl + post.image}
               className="size-full rounded-xl object-cover"
               alt=""
             />
@@ -213,6 +316,7 @@ export default function Cardpost({ sender, post, isOwn }) {
               <LuHeart size={"1.5rem"} />
             )}
           </i>
+
           <i
             onClick={() => setShowComments((prev) => !prev)}
             className={`flex gap-2 justify-center items-center w-1/2 rounded-full h-10 cursor-pointer select-none button ${
@@ -264,7 +368,10 @@ export default function Cardpost({ sender, post, isOwn }) {
                       }`}
                     >
                       <BsEmojiSmile size={"1.5rem"} />
-                      <div className="absolute top-10 -left-3 z-10">
+                      <div
+                        ref={emojiContainer}
+                        className="absolute top-10 -left-3 z-10"
+                      >
                         <EmojiPicker
                           onEmojiClick={handleChangeEmoji}
                           theme={mode}
@@ -283,7 +390,7 @@ export default function Cardpost({ sender, post, isOwn }) {
                     </label>
                     <button
                       type="submit"
-                      className="rounded-3xl bg-[var(--primary-color)] px-4 py-2 text-xs font-semibold  text-teal-50"
+                      className="rounded-3xl bg-[var(--primary-color)] px-4 py-2 text-xs font-semibold  text-[var(--white)]"
                     >
                       Commenter
                     </button>
@@ -298,53 +405,20 @@ export default function Cardpost({ sender, post, isOwn }) {
                   .slice()
                   .reverse()
                   .map((item) => {
-                    return (
-                      <div
-                        key={item._id}
-                        className={`relative p-2 flex justify-between group border-l-2 hover:border-[var(--primary-color)] brd`}
-                      >
-                        <div className="w-full flex flex-row gap-3">
-                          <div className="rounded-full w-10 min-w-10 cursor-pointer">
-                            {
-                              <i className="w-10 h-10 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
-                                <FaUser size={"1rem"} />
-                              </i>
-                              // <img
-                              //   src={"/icon.png"}
-                              //   className="h-10 w-10 rounded-full object-cover"
-                              //   alt=""
-                              // />
-                            }
-                          </div>
-
-                          {item.userId === userId && (
-                            <i
-                              onClick={() => handleDeleteComment(item._id)}
-                              className="absolute transition delay-75 opacity-0 group-hover:opacity-100 z-10 bottom-2 right-2 h-6 w-6 bg-[var(--primary-color)] rounded-tl-xl rounded-tr-xl rounded-br-xl rounded-bl-sm flex justify-center items-center text-[var(--white)] hover:opacity-90 cursor-pointer"
-                            >
-                              <HiOutlineTrash size={"1rem"} />
-                            </i>
-                          )}
-
-                          <div className="w-full flex flex-col">
-                            <div className="w-full flex justify-between">
-                              <p className="text-sm font-semibold text-[var(--opposite)]">
-                                Flavien RAK
-                              </p>
-                              <div className="text-xs text-[var(--opposite)] opacity-60 font-light">
-                                {format(item.timestamp, "fr")}
-                              </div>
-                            </div>
-
-                            <div className="w-full">
-                              <p className="text-xs text-[var(--opposite)] opacity-60 font-light">
-                                {item.text}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    const actualUser = users.find(
+                      (us) => us._id === item.userId
                     );
+
+                    if (!isEmpty(actualUser))
+                      return (
+                        <div key={item._id} className="w-full">
+                          <Comment
+                            post={post}
+                            comment={item}
+                            user={actualUser}
+                          />
+                        </div>
+                      );
                   })}
               </div>
             )}
