@@ -15,6 +15,11 @@ import { differenceInCalendarDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { fetchUsers } from "../redux/slices/usersSlice";
 import { fetchMessagesInfos } from "../redux/slices/messagesSlice";
+import {
+  deleteNotificationsInfos,
+  fetchNotifications,
+  updateAllNotifications,
+} from "../redux/slices/notificationsSlice";
 
 register("fr", frLocale);
 
@@ -23,19 +28,6 @@ const profilUrl = "http://localhost:8000/uploads/profile/";
 const postUrl = "http://localhost:8000/uploads/post/";
 
 export const UidContext = createContext();
-
-const formatDate = (date) => {
-  const messageDate = new Date(date);
-  const isToday = differenceInCalendarDays(new Date(), messageDate) === 0;
-
-  if (isToday) {
-    return format(date, "HH:mm");
-  } else {
-    return `${format(date, "d", { locale: fr })} ${format(date, "MMMM", {
-      locale: fr,
-    })} - ${format(date, "HH:mm")}`;
-  }
-};
 
 export default function UidContextProvider({ children }) {
   const location = useLocation();
@@ -48,6 +40,7 @@ export default function UidContextProvider({ children }) {
   const [currentQuery, setCurrentQuery] = useState({});
   const [showLogout, setShowLogout] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [getNotifications, setGetNotifications] = useState(false);
   const [getUsers, setGetUsers] = useState(false);
   const [getPosts, setGetPosts] = useState(false);
   const [getMessages, setGetMessages] = useState(false);
@@ -100,7 +93,7 @@ export default function UidContextProvider({ children }) {
 
         if (res?.user) {
           dispatch(fetchUserInfos({ user: res.user }));
-          setGetUsers(true);
+          setGetNotifications(true);
         } else {
           dispatch(updatePersistInfos({ authToken: null }));
           if (protectedPaths.includes(location.pathname)) {
@@ -110,6 +103,21 @@ export default function UidContextProvider({ children }) {
       })();
     }
   }, [userId]);
+
+  useEffect(() => {
+    if (!isEmpty(getNotifications)) {
+      (async () => {
+        const res = await fetch(
+          `${apiUrl}/notification/${userId}/get-notifs`
+        ).then((res) => res.json());
+
+        if (res?.notifications) {
+          dispatch(fetchNotifications({ notifications: res.notifications }));
+          setGetUsers(true);
+        }
+      })();
+    }
+  }, [getNotifications]);
 
   useEffect(() => {
     if (getUsers) {
@@ -143,6 +151,18 @@ export default function UidContextProvider({ children }) {
         }
 
         if (res?.posts) {
+          (async () => {
+            const res = await fetch(
+              `${apiUrl}/notification/${userId}/post/view-all`
+            ).then((res) => res.json());
+
+            if (res?.notifications) {
+              dispatch(
+                deleteNotificationsInfos({ notifications: res.notifications })
+              );
+            }
+          })();
+
           dispatch(fetchPostsInfos({ posts: res.posts }));
           setGetMessages(true);
           setGetPosts(false);
@@ -178,12 +198,25 @@ export default function UidContextProvider({ children }) {
     },
   };
 
+  const formatDate = (date) => {
+    const messageDate = new Date(date);
+    const isToday = differenceInCalendarDays(new Date(), messageDate) === 0;
+
+    if (isToday) {
+      return format(date, "HH:mm");
+    } else {
+      return `${format(date, "d", { locale: fr })} ${format(date, "MMMM", {
+        locale: fr,
+      })} - ${format(date, "HH:mm")}`;
+    }
+  };
+
   const loginOut = (value) => {
     setShowLogout(value);
   };
 
-  const refetchPost = () => {
-    setGetPosts(true);
+  const refetchPost = (value) => {
+    setGetPosts(value);
   };
 
   return (
@@ -201,7 +234,6 @@ export default function UidContextProvider({ children }) {
         formatDate,
         refetchPost,
         loginOut,
-        formatDate,
       }}
     >
       {children}

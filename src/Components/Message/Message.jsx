@@ -3,14 +3,31 @@ import NouveauMessage from "./NouveauMessage";
 import UserMessage from "./UserMessage";
 
 import { isEmpty } from "../../lib/allFunctions";
-import { useSelector } from "react-redux";
-import { useContext } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useContext, useEffect } from "react";
 import { UidContext } from "../../context/UidContext";
+import { deleteNotificationsInfos } from "../../redux/slices/notificationsSlice";
 
 export default function Message() {
   const { users } = useSelector((state) => state.users);
   const { messages } = useSelector((state) => state.messages);
-  const { currentQuery } = useContext(UidContext);
+  const { currentQuery, apiUrl, userId } = useContext(UidContext);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch(
+        `${apiUrl}/notification/${userId}/message/view-all`
+      ).then((res) => res.json());
+
+      if (res?.notifications) {
+        dispatch(
+          deleteNotificationsInfos({ notifications: res.notifications })
+        );
+      }
+    })();
+  }, []);
 
   return (
     <div className="mt-6 w-full">
@@ -34,12 +51,20 @@ export default function Message() {
                   const actualUser = users.find((us) => us._id === item.userId);
                   const actualMessages = item.messages;
 
+                  const notif = actualMessages.filter(
+                    (item) =>
+                      item.senderId === actualUser?._id &&
+                      item.receiverId === userId &&
+                      item.viewed === false
+                  )?.length;
+
                   if (!isEmpty(actualUser) && !isEmpty(actualMessages))
                     return (
                       <div key={actualUser._id} className="w-full">
                         <UserMessage
                           message={actualMessages[actualMessages.length - 1]}
                           user={actualUser}
+                          notif={notif > 0 ? notif : null}
                         />
                       </div>
                     );

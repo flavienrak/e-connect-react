@@ -18,6 +18,7 @@ import Suivies from "../suivies/Suivies";
 import CreatePost from "../postes/CreatePost";
 import ViewProfil from "../Profil/ViewProfil";
 import Search from "../search/Search";
+import SinglePost from "../postes/SinglePost";
 
 export default function Home() {
   const { user } = useSelector((state) => state.user);
@@ -43,6 +44,8 @@ export default function Home() {
                 ) : currentQuery?.active === "view-profil" &&
                   !isEmpty(currentQuery?.user) ? (
                   <ViewProfil />
+                ) : !isEmpty(currentQuery?.post) ? (
+                  <SinglePost />
                 ) : currentQuery?.path === "poste" ? (
                   <Postes />
                 ) : currentQuery?.path === "suggestion" ? (

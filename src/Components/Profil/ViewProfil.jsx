@@ -9,12 +9,11 @@ import { isEmpty } from "../../lib/allFunctions";
 import { useSelector } from "react-redux";
 
 export default function ViewProfil() {
-  const { currentQuery, apiUrl, userId } = useContext(UidContext);
   const { users } = useSelector((state) => state.users);
   const { posts } = useSelector((state) => state.posts);
+  const { currentQuery, apiUrl, userId } = useContext(UidContext);
 
   const [user, setUser] = useState(null);
-
   const [items, setItems] = useState([
     {
       label: "Publication",
@@ -32,7 +31,6 @@ export default function ViewProfil() {
       number: 0,
     },
   ]);
-
   const [active, setActive] = useState(items[0].active);
   const [views, setViews] = useState(false);
 
@@ -78,7 +76,7 @@ export default function ViewProfil() {
 
                   if (!isEmpty(actualUser))
                     return (
-                      <div className="w-full">
+                      <div key={item} className="w-full">
                         <ListView user={actualUser} />
                       </div>
                     );

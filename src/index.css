@@ -71,6 +71,7 @@ body {
   --white: #ffffff;
   --text: #033;
   --bg-red: rgba(239, 68, 68, 0.25);
+  --red: #ea4f4f;
 
   margin: 0;
   padding: 0;
@@ -87,6 +88,7 @@ body {
 textarea {
   resize: none;
   height: 3rem;
+  min-height: 2.5rem;
 }
 .blueTheme * {
   --primary-color: #149be9;

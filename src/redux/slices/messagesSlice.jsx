@@ -12,6 +12,31 @@ const messagesSlice = createSlice({
       const { messages } = action.payload;
       state.messages = messages;
     },
+    updateMessagesInfos: (state, action) => {
+      const { messages, userId } = action.payload;
+      const userIndex = state.messages.findIndex(
+        (item) => item.userId === userId
+      );
+
+      if (userIndex !== -1) {
+        const existingMessages = state.messages[userIndex].messages;
+        messages.forEach((item) => {
+          const existingMessageIndex = existingMessages.findIndex(
+            (m) => m._id === item._id
+          );
+          if (existingMessageIndex !== -1) {
+            existingMessages[existingMessageIndex] = {
+              ...existingMessages[existingMessageIndex],
+              ...item,
+            };
+          } else {
+            existingMessages.push(item);
+          }
+        });
+      } else {
+        state.messages.push({ userId, messages });
+      }
+    },
     addMessageInfos: (state, action) => {
       const { message, userId } = action.payload;
       const userIndex = state.messages.findIndex(
@@ -67,6 +92,7 @@ const messagesSlice = createSlice({
 
 export const {
   fetchMessagesInfos,
+  updateMessagesInfos,
   addMessageInfos,
   deleteMessageInfos,
   removeMesssagesInfos,

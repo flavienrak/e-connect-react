@@ -14,72 +14,85 @@ import { isEmpty } from "../../lib/allFunctions";
 import { FiMessageSquare } from "react-icons/fi";
 import { SlBell } from "react-icons/sl";
 
-const menuItems = [
-  {
-    label: "Accueil",
-    path: "accueil",
-    icon: <TbHome2 size={"1.5rem"} />,
-    notified: true,
-  },
-  {
-    label: "Messages",
-    path: "message",
-    icon: <FiMessageSquare size={"1.5rem"} />,
-    notified: true,
-  },
-  {
-    label: "Postes",
-    path: "poste",
-    icon: <HiOutlineWindow size={"1.5rem"} />,
-    notified: true,
-  },
-  {
-    label: "Suivies",
-    path: "suivie",
-    icon: <LuHeart size={"1.35rem"} />,
-    notified: true,
-  },
-  {
-    label: "Notifications",
-    path: "notification",
-    icon: <SlBell size={"1.4rem"} />,
-    notified: true,
-  },
-  {
-    label: "Abonnées",
-    path: "abonnee",
-    icon: <PiShareNetwork size={"1.5rem"} />,
-    notified: true,
-  },
-  {
-    label: "Suggestions",
-    path: "suggestion",
-    icon: <HiOutlineUserGroup size={"1.5rem"} />,
-    notified: true,
-  },
-  {
-    label: "Profil",
-    path: "profil",
-    icon: <AiOutlineUser size={"1.5rem"} />,
-    notified: true,
-  },
-  {
-    label: "Paramètres",
-    path: "setting",
-    icon: <LuSettings size={"1.5rem"} />,
-    notified: false,
-  },
-];
-
 export default function Gauche() {
-  const { currentQuery, path, refetchPost } = useContext(UidContext);
   const { user } = useSelector((state) => state.user);
+  const { notifications } = useSelector((state) => state.notifications);
+  const { currentQuery, path, refetchPost } = useContext(UidContext);
 
   const push = useNavigate();
 
   const [actualLink, setActualLink] = useState(
-    "/home?path=accueil&active=create-post"
+    qs.stringifyUrl(
+      {
+        url: path,
+        query: {
+          path: currentQuery.path,
+          active: "create-post",
+        },
+      },
+      { skipNull: true }
+    )
   );
+
+  const [menuItems, setMenuItems] = useState([
+    {
+      label: "Accueil",
+      path: "accueil",
+      icon: <TbHome2 size={"1.5rem"} />,
+      notified: true,
+      number: 0,
+    },
+    {
+      label: "Messages",
+      path: "message",
+      icon: <FiMessageSquare size={"1.5rem"} />,
+      notified: true,
+      number: 0,
+    },
+    {
+      label: "Postes",
+      path: "poste",
+      icon: <HiOutlineWindow size={"1.5rem"} />,
+      notified: false,
+    },
+    {
+      label: "Suivies",
+      path: "suivie",
+      icon: <LuHeart size={"1.35rem"} />,
+      notified: false,
+    },
+    {
+      label: "Notifications",
+      path: "notification",
+      icon: <SlBell size={"1.4rem"} />,
+      notified: true,
+      number: 0,
+    },
+    {
+      label: "Abonnées",
+      path: "abonnee",
+      icon: <PiShareNetwork size={"1.5rem"} />,
+      notified: false,
+    },
+    {
+      label: "Suggestions",
+      path: "suggestion",
+      icon: <HiOutlineUserGroup size={"1.5rem"} />,
+      notified: false,
+    },
+    {
+      label: "Profil",
+      path: "profil",
+      icon: <AiOutlineUser size={"1.5rem"} />,
+      notified: false,
+    },
+    {
+      label: "Paramètres",
+      path: "setting",
+      icon: <LuSettings size={"1.5rem"} />,
+      notified: false,
+    },
+  ]);
 
   useEffect(() => {
     if (currentQuery?.path) {
@@ -95,16 +108,72 @@ export default function Gauche() {
       );
       setActualLink(url);
     } else {
-      push("/home?path=accueil");
+      push(
+        qs.stringifyUrl(
+          {
+            url: path,
+            query: {
+              path: "accueil",
+            },
+          },
+          { skipNull: true }
+        )
+      );
     }
   }, [currentQuery?.path]);
+
+  useEffect(() => {
+    if (notifications) {
+      setMenuItems((prev) => {
+        let newState = [...prev];
+
+        newState.forEach((item) => {
+          if (item.notified) {
+            if (item.path === prev[0].path) {
+              item.number =
+                notifications.filter((notif) => !notif.viewed && notif.newPost)
+                  .length +
+                notifications.filter((notif) => !notif.viewed && notif.editPost)
+                  .length;
+            } else if (item.path === prev[1].path) {
+              item.number = notifications.filter(
+                (notif) => !notif.viewed && notif.newMessage
+              ).length;
+            } else if (item.path === prev[4].path) {
+              item.number =
+                notifications.filter((notif) => !notif.viewed && notif.liked)
+                  .length +
+                notifications.filter(
+                  (notif) => !notif.viewed && notif.commented
+                ).length +
+                notifications.filter((notif) => !notif.viewed && notif.followed)
+                  .length;
+            }
+          }
+        });
+
+        return newState;
+      });
+    }
+  }, [notifications]);
+
+  const url = (actualPath) =>
+    qs.stringifyUrl(
+      {
+        url: path,
+        query: {
+          path: actualPath,
+        },
+      },
+      { skipNull: true }
+    );
 
   return (
     <>
       <div className="fixed w-full h-full left-[2%] sm:left-[10%] top-20 pointer-events-none">
         <div className="flex w-16 flex-col gap-6  pointer-events-auto lg:w-60">
           <Link
-            to={"/home?path=profil"}
+            to={url("profil")}
             className="flex gap-4 rounded-lg bg-[var(--bg-primary)] h-14 items-center px-2 justify-center lg:px-4 lg:justify-start"
           >
             <ProfilImg online={true} image={user.image} />
@@ -123,10 +192,10 @@ export default function Gauche() {
               {menuItems.map((item) => (
                 <Link
                   key={item.path}
-                  to={`/home?path=${item.path}`}
+                  to={url(item.path)}
                   onClick={() => {
                     if (item.path === menuItems[0].path) {
-                      refetchPost();
+                      refetchPost(true);
                     }
                   }}
                   className={`relative flex w-full gap-4 cursor-pointer border-l-4 h-12 items-center px-4 
@@ -143,9 +212,10 @@ export default function Gauche() {
                   <p className="font-semibold w-max hidden lg:block">
                     {item.label}
                   </p>
-                  {/* {item.notified && (
+
+                  {item.notified && item?.number !== 0 && (
                     <div
-                      className={`absolute left-7 top-2 border-2 flex size-5 items-center justify-center rounded-full bg-[var(--red-color)] font-bold text-[var(--white-color)] ${
+                      className={`absolute left-7 top-2 border-2 flex size-5 items-center justify-center rounded-full bg-[var(--red)] font-bold text-[var(--white-color)] ${
                         currentQuery?.path === item.path ||
                         (item.path === menuItems[0].path &&
                           isEmpty(currentQuery?.path))
@@ -154,10 +224,10 @@ export default function Gauche() {
                       }`}
                     >
                       <p className="text-xs flex justify-center items-center">
-                        1
+                        {item.number}
                       </p>
                     </div>
-                  )} */}
+                  )}
                 </Link>
               ))}
             </div>

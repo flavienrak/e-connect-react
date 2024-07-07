@@ -70,10 +70,7 @@ export default function Ajouter({ isOwn, user, isFollowed }) {
           to={actualLink}
           className="h-10 w-10 relative min-w-10 min-h-10 cursor-pointer"
         >
-          <ProfilImg
-            online={isOnline(user._id) && user._id !== userId}
-            image={user.image}
-          />
+          <ProfilImg online={isOnline(user._id)} image={user.image} />
         </Link>
         {isOwn ? (
           <div className="flex flex-col flex-1">

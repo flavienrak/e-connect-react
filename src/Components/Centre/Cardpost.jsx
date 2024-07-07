@@ -1,8 +1,7 @@
-import EmojiPicker from "emoji-picker-react";
 import toast from "react-hot-toast";
 import qs from "query-string";
 import ProfilImg from "../Profil/ProfilImg";
-import Comment from "../postes/Comment";
+import CommentsPost from "../postes/CommentsPost";
 
 import { IoMdHeart } from "react-icons/io";
 import { MdClose } from "react-icons/md";
@@ -16,31 +15,25 @@ import {
   removeOnePostInfos,
   updateCommentsPostInfos,
   updateLikesPostInfos,
+  updatePostInfos,
 } from "../../redux/slices/postsSlice";
 import { LuHeart } from "react-icons/lu";
-import { BsEmojiSmile } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { updateUserInfos } from "../../redux/slices/userSlice";
 import { FaCircleCheck, FaRegCircleCheck } from "react-icons/fa6";
 import { SocketContext } from "../../context/SocketContext";
 
-export default function Cardpost({ sender, post, isOwn }) {
+export default function Cardpost({ sender, post, isOwn, isViewPost }) {
   const { user } = useSelector((state) => state.user);
-  const { mode } = useSelector((state) => state.persistInfos);
-  const { users } = useSelector((state) => state.users);
   const { isOnline, socket } = useContext(SocketContext);
   const { apiUrl, userId, toastStyle, postUrl, path, currentQuery } =
     useContext(UidContext);
 
   const emoji = useRef(null);
-  const commentTextarea = useRef(null);
-  const textarea = useRef(null);
   const emojiContainer = useRef(null);
   const dispatch = useDispatch();
 
-  const [message, setMessage] = useState("");
-  const [comment, setComment] = useState("");
   const [isCollapse, setIsCollapse] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -50,36 +43,22 @@ export default function Cardpost({ sender, post, isOwn }) {
 
   useEffect(() => {
     if (socket) {
-      const likePost = (post) => {
-        dispatch(updateLikesPostInfos({ post }));
-      };
       const commentPost = (post) => {
         dispatch(updateCommentsPostInfos({ post }));
       };
+      const editPost = (post) => {
+        dispatch(updatePostInfos({ post }));
+      };
 
-      socket.on("likePost", likePost);
+      socket.on("editPost", editPost);
       socket.on("commentPost", commentPost);
 
       return () => {
-        socket.off("likePost", likePost);
         socket.off("commentPost", commentPost);
+        socket.off("editPost", editPost);
       };
     }
   }, [socket]);
-
-  useEffect(() => {
-    if (textarea.current) {
-      textarea.current.style.height = "2.5rem";
-      textarea.current.style.height = `${textarea.current.scrollHeight}px`;
-    }
-  }, [message]);
-
-  useEffect(() => {
-    if (commentTextarea.current) {
-      commentTextarea.current.style.height = "2.5rem";
-      commentTextarea.current.style.height = `${commentTextarea.current.scrollHeight}px`;
-    }
-  }, [comment]);
 
   useEffect(() => {
     if (!isEmpty(sender?._id)) {
@@ -132,9 +111,16 @@ export default function Cardpost({ sender, post, isOwn }) {
     { skipNull: true }
   );
 
-  const handleChangeEmoji = (e) => {
-    setMessage((prev) => prev + e.emoji);
-  };
+  const viewPostUrl = qs.stringifyUrl(
+    {
+      url: path,
+      query: {
+        path: currentQuery.path,
+        post: post._id,
+      },
+    },
+    { skipNull: true }
+  );
 
   const handleLike = async () => {
     setIsLoading(true);
@@ -146,38 +132,6 @@ export default function Cardpost({ sender, post, isOwn }) {
     if (res?.post) {
       dispatch(updateUserInfos({ user: res.user }));
       dispatch(updateLikesPostInfos({ post: res.post }));
-    }
-  };
-
-  const resetComment = () => {
-    setComment("");
-  };
-
-  const handleComment = async (e) => {
-    e.preventDefault();
-
-    if (!isEmpty(comment?.trim())) {
-      const res = await fetch(
-        `${apiUrl}/post/${userId}/${post._id}/comment-post`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ comment }),
-        }
-      ).then((res) => res.json());
-      resetComment();
-
-      if (res?.post) {
-        dispatch(updateUserInfos({ user: res.user }));
-        dispatch(updateCommentsPostInfos({ post: res.post }));
-        toast.success("Commentaire ajouté", toastStyle);
-      }
-    }
-  };
-
-  const handleEnter = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      handleComment(e);
     }
   };
 
@@ -222,14 +176,11 @@ export default function Cardpost({ sender, post, isOwn }) {
 
   return (
     <>
-      <div className="flex w-full flex-col gap-2 rounded-xl bg-[var(--bg-primary)] p-4">
+      <div className="flex w-full flex-col gap-2 rounded-xl bg-[var(--bg-primary)] p-4 group">
         <div className="flex flex-row justify-between">
           <div className="flex flex-row gap-2">
             <Link to={url}>
-              <ProfilImg
-                online={isOnline(sender._id) && sender._id !== userId}
-                image={sender.image}
-              />
+              <ProfilImg online={isOnline(sender._id)} image={sender.image} />
             </Link>
 
             <div className="">
@@ -256,20 +207,22 @@ export default function Cardpost({ sender, post, isOwn }) {
             </div>
           </div>
 
-          {!user.rejectedPost.includes(post._id) && (
-            <i
-              onClick={() => {
-                if (isOwn) {
-                  setDeletePost((prev) => !prev);
-                } else {
-                  handleRejectPost();
-                }
-              }}
-              className="cursor-pointer"
-            >
-              <MdClose className="text-slate-400" size={"1.5rem"} />
-            </i>
-          )}
+          <div className="flex items-center gap-2">
+            {!user.rejectedPost.includes(post._id) && (
+              <i
+                onClick={() => {
+                  if (isOwn) {
+                    setDeletePost((prev) => !prev);
+                  } else {
+                    handleRejectPost();
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <MdClose className="text-slate-400" size={"1.5rem"} />
+              </i>
+            )}
+          </div>
         </div>
 
         {!isEmpty(post.image) && (
@@ -286,11 +239,19 @@ export default function Cardpost({ sender, post, isOwn }) {
           <div className="flex items-center gap-2 pl-2">
             <p
               onClick={() => setIsCollapse((prev) => !prev)}
-              className={`text-sm text-[var(--opposite)] font-light ${
-                isCollapse ? "" : "line-clamp-3"
+              className={`text-sm text-[var(--opposite)] font-light whitespace-pre-line ${
+                isCollapse || isViewPost ? "" : "line-clamp-3"
               }`}
             >
-              {post.message}
+              {post.message}{" "}
+              {!isViewPost && (
+                <Link
+                  to={viewPostUrl}
+                  className="w-max opacity-0 text-[var(--primary-color)] group-hover:opacity-100 hover:underline"
+                >
+                  <span className="text-sm">{`consulter ->`}</span>
+                </Link>
+              )}
             </p>
           </div>
         )}
@@ -336,94 +297,7 @@ export default function Cardpost({ sender, post, isOwn }) {
           </i>
         </div>
 
-        {showComments && (
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor=""
-              className="font-semibold p-2 text-[var(--opposite)]"
-            >
-              Commentaires
-            </label>
-
-            <form onSubmit={handleComment} className="overflow-visible">
-              <div className="relative w-full flex items-center">
-                <div className="w-full flex flex-col gap-2">
-                  <div className="relative flex items-center">
-                    <textarea
-                      ref={commentTextarea}
-                      type="text"
-                      className="w-full text-sm outline-none py-3 px-4 rounded-xl overflow-hidden bg-[var(--bg-secondary)] pl-12 textarea text-[var(--opposite)] placeholder:opacity-50"
-                      placeholder="Ajouter un commentaire..."
-                      value={comment}
-                      onKeyDown={handleEnter}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
-                    <i
-                      ref={emoji}
-                      onClick={() => setShowEmoji((prev) => !prev)}
-                      className={`cursor-pointer absolute left-3 ${
-                        showEmoji
-                          ? "text-[var(--primary-color)]"
-                          : "text-[var(--opposite)] opacity-25 hover:opacity-100"
-                      }`}
-                    >
-                      <BsEmojiSmile size={"1.5rem"} />
-                      <div
-                        ref={emojiContainer}
-                        className="absolute top-10 -left-3 z-10"
-                      >
-                        <EmojiPicker
-                          onEmojiClick={handleChangeEmoji}
-                          theme={mode}
-                          open={showEmoji}
-                        />
-                      </div>
-                    </i>
-                  </div>
-
-                  <div className="w-full flex gap-2 items-center justify-end">
-                    <label
-                      onClick={resetComment}
-                      className="rounded-3xl button px-4 py-2 text-xs button text-[var(--opposite)] cursor-pointer"
-                    >
-                      Annuler
-                    </label>
-                    <button
-                      type="submit"
-                      className="rounded-3xl bg-[var(--primary-color)] px-4 py-2 text-xs font-semibold  text-[var(--white)]"
-                    >
-                      Commenter
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-
-            {!isEmpty(post.comments) && (
-              <div className="flex flex-col">
-                {post.comments
-                  .slice()
-                  .reverse()
-                  .map((item) => {
-                    const actualUser = users.find(
-                      (us) => us._id === item.userId
-                    );
-
-                    if (!isEmpty(actualUser))
-                      return (
-                        <div key={item._id} className="w-full">
-                          <Comment
-                            post={post}
-                            comment={item}
-                            user={actualUser}
-                          />
-                        </div>
-                      );
-                  })}
-              </div>
-            )}
-          </div>
-        )}
+        {showComments && <CommentsPost post={post} />}
       </div>
 
       {deletePost && isOwn && (

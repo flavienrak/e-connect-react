@@ -20,6 +20,12 @@ const postsSlice = createSlice({
       const { post } = action.payload;
       state.posts = state.posts.filter((item) => item._id !== post._id);
     },
+    updatePostInfos: (state, action) => {
+      const { post } = action.payload;
+      state.posts = state.posts.map((item) =>
+        item._id === post._id ? post : item
+      );
+    },
     updateLikesPostInfos: (state, action) => {
       const { post } = action.payload;
       state.posts = state.posts.map((item) =>
@@ -41,6 +47,7 @@ const postsSlice = createSlice({
 export const {
   fetchPostsInfos,
   addOnePostInfos,
+  updatePostInfos,
   updateLikesPostInfos,
   updateCommentsPostInfos,
   removeOnePostInfos,

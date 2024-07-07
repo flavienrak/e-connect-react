@@ -33,6 +33,8 @@ export default function Comment({ user, comment, post }) {
       `${apiUrl}/post/${userId}/${post._id}/${comment._id}/delete-comment`
     ).then((res) => res.json());
 
+    console.log(res);
+
     if (res?.post) {
       dispatch(updateUserInfos({ user: res.user }));
       dispatch(updateCommentsPostInfos({ post: res.post }));
@@ -45,10 +47,7 @@ export default function Comment({ user, comment, post }) {
       className={`relative p-2 flex justify-between group border-l-2 hover:border-[var(--primary-color)] hover:bg-[var(--bg-secondary)] transition delay-75 brd`}
     >
       <div className="w-full flex flex-row gap-3">
-        <ProfilImg
-          online={isOnline(user._id) && user._id !== userId}
-          image={user.image}
-        />
+        <ProfilImg online={isOnline(user._id)} image={user.image} />
 
         {(comment.userId === userId || post.senderId === userId) && (
           <i

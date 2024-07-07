@@ -1,6 +1,7 @@
 import EmojiPicker from "emoji-picker-react";
 import TextMessage from "./TextMessage";
 import ProfilImg from "../Profil/ProfilImg";
+import qs from "query-string";
 
 import { MdClose } from "react-icons/md";
 import { BsEmojiSmile } from "react-icons/bs";
@@ -10,15 +11,21 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { UidContext } from "../../context/UidContext";
 import { isEmpty } from "../../lib/allFunctions";
 import { Link } from "react-router-dom";
-import { addMessageInfos } from "../../redux/slices/messagesSlice";
+import {
+  addMessageInfos,
+  updateMessagesInfos,
+} from "../../redux/slices/messagesSlice";
 import { SocketContext } from "../../context/SocketContext";
+import { deleteNotificationsInfos } from "../../redux/slices/notificationsSlice";
+import { FaUser } from "react-icons/fa";
 
 export default function SingleMessage() {
   const { mode } = useSelector((state) => state.persistInfos);
   const { users } = useSelector((state) => state.users);
   const { messages } = useSelector((state) => state.messages);
-  const { isOnline, socket } = useContext(SocketContext);
-  const { currentQuery, apiUrl, userId } = useContext(UidContext);
+  const { isOnline } = useContext(SocketContext);
+  const { currentQuery, apiUrl, userId, path, profilUrl } =
+    useContext(UidContext);
 
   const last = useRef(null);
   const textarea = useRef(null);
@@ -33,6 +40,7 @@ export default function SingleMessage() {
   const [actualMessages, setActualMessages] = useState([]);
   const [isMounted, setIsMounted] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const [isViewed, setIsViewed] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -55,25 +63,58 @@ export default function SingleMessage() {
   useEffect(() => {
     if (!isEmpty(currentQuery?.user)) {
       setUser(users.find((item) => item._id === currentQuery.user));
+
+      (async () => {
+        const res = await fetch(
+          `${apiUrl}/message/${userId}/${currentQuery.user}/view-all`
+        ).then((res) => res.json());
+
+        if (res?.messages) {
+          dispatch(
+            updateMessagesInfos({
+              messages: res.messages,
+              userId: currentQuery.user,
+            })
+          );
+        }
+      })();
+    }
+  }, [currentQuery?.user, users]);
+
+  useEffect(() => {
+    if (messages) {
+      (async () => {
+        const res = await fetch(
+          `${apiUrl}/notification/${userId}/message/view-all`
+        ).then((res) => res.json());
+
+        if (res?.notifications) {
+          dispatch(
+            deleteNotificationsInfos({ notifications: res.notifications })
+          );
+        }
+      })();
+
       setActualMessages(
         messages.find((item) => item.userId === currentQuery.user)?.messages ||
           []
       );
 
-      if (socket) {
-        const addMessage = (obj) => {
-          const { message, userId } = obj;
-          dispatch(addMessageInfos({ message, userId }));
-          setIsAdded(true);
-        };
-        socket.on("newMessage", addMessage);
-
-        return () => {
-          socket.off("newMessage", addMessage);
-        };
+      if ((isMounted || isAdded) && last?.current) {
+        last?.current.scrollIntoView();
+        setIsAdded(false);
       }
     }
-  }, [messages, currentQuery?.user, socket]);
+  }, [messages]);
+
+  useEffect(() => {
+    if (!isEmpty(actualMessages)) {
+      setIsViewed(
+        actualMessages.every((item) => item.viewed === true) &&
+          actualMessages[actualMessages.length - 1]?.senderId === userId
+      );
+    }
+  }, [actualMessages]);
 
   useEffect(() => {
     if (showEmoji) {
@@ -133,15 +174,26 @@ export default function SingleMessage() {
     }
   };
 
+  const url = qs.stringifyUrl(
+    {
+      url: path,
+      query: {
+        path: "profil",
+        active: "view-profil",
+        user: user?._id,
+      },
+    },
+    { skipNull: true }
+  );
+
   if (!isEmpty(user))
     return (
       <div className="w-full max-h-full rounded-xl bg-[var(--bg-primary)]">
         <div className="flex items-center justify-between p-4 w-full">
           <div className="flex gap-2 items-center ">
-            <ProfilImg
-              online={isOnline(user._id) && user._id !== userId}
-              image={user.image}
-            />
+            <Link to={url}>
+              <ProfilImg online={isOnline(user._id)} image={user.image} />
+            </Link>
 
             <div className=" leading-0">
               <p className="font-semibold text-lg leading-6 text-[var(--opposite)]">
@@ -174,6 +226,24 @@ export default function SingleMessage() {
                   ))}
                 </div>
               )}
+
+              {isViewed && (
+                <div className={`flex justify-end py-2`}>
+                  {isEmpty(user.image) ? (
+                    <i className="w-5 h-5 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
+                      <FaUser size={"0.7rem"} />
+                    </i>
+                  ) : (
+                    <img
+                      src={profilUrl + user.image}
+                      className="rounded-full object-cover h-5 w-5"
+                      alt=""
+                    />
+                  )}
+                </div>
+              )}
+
+              <div className="h-14" />
               <div ref={last} />
             </div>
           </div>

@@ -78,10 +78,7 @@ export default function SingleProfil({
     <div className="bg-[var(--bg-primary)] p-4 rounded-xl flex flex-col gap-2">
       <div className="flex justify-between">
         <div className="flex gap-2">
-          <ProfilImg
-            online={isOnline(user._id) && user._id !== userId}
-            image={user.image}
-          />
+          <ProfilImg online={false} image={user.image} />
           <div className="flex flex-col justify-center">
             <p className="font-semibold text-[var(--opposite)]">{user.name}</p>
             <p className="text-xs text-[var(--opposite)] opacity-60 font-light">

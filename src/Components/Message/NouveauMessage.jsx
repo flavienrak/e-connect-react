@@ -108,7 +108,7 @@ export default function NouveauMessage() {
                     >
                       <div className="w-full flex flex-row gap-3">
                         <ProfilImg
-                          online={isOnline(item._id) && item._id !== userId}
+                          online={isOnline(item._id)}
                           image={item.image}
                         />
 

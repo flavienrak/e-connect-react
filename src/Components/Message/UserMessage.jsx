@@ -2,13 +2,30 @@ import qs from "query-string";
 import ProfilImg from "../Profil/ProfilImg";
 
 import { Link } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { UidContext } from "../../context/UidContext";
 import { SocketContext } from "../../context/SocketContext";
+import { updateAllNotifications } from "../../redux/slices/notificationsSlice";
+import { useDispatch } from "react-redux";
 
-export default function UserMessage({ user, message }) {
+export default function UserMessage({ user, message, notif }) {
   const { isOnline } = useContext(SocketContext);
-  const { path, currentQuery, formatDate, userId } = useContext(UidContext);
+  const { path, currentQuery, formatDate, apiUrl, userId } =
+    useContext(UidContext);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch(`${apiUrl}/notification/${userId}/view-all`).then(
+        (res) => res.json()
+      );
+
+      if (res?.notifications) {
+        dispatch(updateAllNotifications({ notifications: res.notifications }));
+      }
+    })();
+  }, []);
 
   const url = qs.stringifyUrl(
     {
@@ -26,28 +43,34 @@ export default function UserMessage({ user, message }) {
       to={url}
       className="relative bg-[var(--bg-primary)] flex rounded-xl p-4 gap-2 min-w-60 cursor-default"
     >
-      <div className="flex justify-center items-center gap-2">
-        <ProfilImg
-          online={isOnline(user._id) && user._id !== userId}
-          image={user.image}
-        />
-        <div className="flex items-center min-h-full">
-          <label className="w-full pr-10 flex justify-center flex-col">
-            <p className="font-semibold text-[var(--opposite)]">{user.name}</p>
-            <p
+      <div className="w-full flex justify-center items-center gap-2">
+        <ProfilImg online={isOnline(user._id)} image={user.image} />
+        <div className="flex-1 flex flex-col">
+          <div className="flex justify-between items-center gap-2">
+            <label className="font-semibold text-[var(--opposite)]">
+              {user.name}
+            </label>
+            <p className="text-xs text-[var(--opposite)] font-semibold">
+              {formatDate(message.updatedAt)}
+            </p>
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            <label
               className={`text-sm line-clamp-1 text-[var(--opposite)] ${
                 message.status === "vue" ? "opacity-80 font-light" : ""
               }`}
             >
               {message.message}
-            </p>
-          </label>
+            </label>
+
+            {notif && (
+              <p className="flex justify-center items-center text-xs h-5 w-5 rounded-full bg-[var(--primary-color)] text-[var(--white)] font-semibold">
+                {notif}
+              </p>
+            )}
+          </div>
         </div>
       </div>
-
-      <p className="text-xs text-[var(--opposite)] absolute top-5 right-5 font-semibold">
-        {formatDate(message.updatedAt)}
-      </p>
     </Link>
   );
 }

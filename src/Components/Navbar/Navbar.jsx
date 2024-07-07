@@ -15,7 +15,7 @@ export default function Navbar() {
   const dispatch = useDispatch();
   const push = useNavigate();
 
-  const { showLogout, loginOut, toastStyle, path, currentQuery } =
+  const { showLogout, loginOut, toastStyle, path, currentQuery, refetchPost } =
     useContext(UidContext);
 
   const [searchKey, setSearchKey] = useState({ value: "", valid: false });
@@ -77,12 +77,24 @@ export default function Navbar() {
     window.location = "/login";
   };
 
+  const url = (actualPath) =>
+    qs.stringifyUrl(
+      {
+        url: path,
+        query: {
+          path: actualPath,
+        },
+      },
+      { skipNull: true }
+    );
+
   return (
     <>
       <div className="fixed z-10 w-full bg-[var(--bg-primary)] px-[2%] sm:px-[10%] py-2">
         <div className="flex w-full h-full">
           <Link
-            to={"/home?path=accueil"}
+            to={url("accueil")}
+            onClick={() => refetchPost(true)}
             className="flex items-center gap-2 w-max sm:w-1/5"
           >
             <p className="flex justify-center items-center bg-[var(--primary-color)] font-extrabold h-10 w-12 min-w-12 rounded-3xl text-[var(--white)] text-4xl pb-1">

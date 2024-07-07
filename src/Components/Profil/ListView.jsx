@@ -4,10 +4,11 @@ import ProfilImg from "./ProfilImg";
 import { useContext } from "react";
 import { UidContext } from "../../context/UidContext";
 import { Link } from "react-router-dom";
+import { SocketContext } from "../../context/SocketContext";
 
 export default function ListView({ user }) {
-  const { isOnline } = useContext(UidContext);
-  const { path, currentQuery, userId } = useContext(UidContext);
+  const { isOnline } = useContext(SocketContext);
+  const { path, currentQuery } = useContext(UidContext);
 
   const url = qs.stringifyUrl(
     {
@@ -27,10 +28,7 @@ export default function ListView({ user }) {
     >
       <div className="w-full flex flex-row gap-3">
         <Link to={url} className="rounded-full w-10 min-w-10 cursor-pointer">
-          <ProfilImg
-            online={isOnline(user._id) && user._id !== userId}
-            image={user.image}
-          />
+          <ProfilImg online={isOnline(user._id)} image={user.image} />
         </Link>
 
         <div className="w-full flex flex-col">

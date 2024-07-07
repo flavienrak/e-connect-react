@@ -60,7 +60,7 @@ export default function Profil() {
 
                 if (!isEmpty(actualUser))
                   return (
-                    <div className="w-full">
+                    <div key={item} className="w-full">
                       <ListView user={actualUser} />
                     </div>
                   );

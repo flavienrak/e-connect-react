@@ -2,20 +2,15 @@ import { useContext } from "react";
 import ProfilImg from "../Profil/ProfilImg";
 
 import { format } from "date-fns";
-import { UidContext } from "../../context/UidContext";
 import { SocketContext } from "../../context/SocketContext";
 
 export default function Messageperso({ user, message }) {
   const { isOnline } = useContext(SocketContext);
-  const { userId } = useContext(UidContext);
 
   return (
     <>
       <div className="flex cursor-pointer flex-row gap-3">
-        <ProfilImg
-          online={isOnline(user._id) && user._id !== userId}
-          image={user.image}
-        />
+        <ProfilImg online={isOnline(user._id)} image={user.image} />
         <div className="w-full">
           <p className="text-sm font-semibold text-[var(--opposite)]">
             {user.name}
