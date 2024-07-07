@@ -29,9 +29,9 @@ export default function Suivies() {
           </p>
         </div>
         {!isEmpty(followedUsers) ? (
-          <div className="w-full">
+          <div className="grid grid-cols-2 gap-2">
             {followedUsers.map((item) => (
-              <div key={item._id} className="grid grid-cols-2 gap-2">
+              <div key={item._id} className="w-full">
                 <Ajouter
                   user={item}
                   isFollowed={user.followed.includes(item._id)}

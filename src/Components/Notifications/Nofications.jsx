@@ -16,15 +16,19 @@ export default function Nofications() {
   const [prevNotifications, setPrevNotifications] = useState(notifications);
 
   useEffect(() => {
-    (async () => {
-      const res = await fetch(`${apiUrl}/notification/${userId}/view-all`).then(
-        (res) => res.json()
-      );
+    if (notifications) {
+      (async () => {
+        const res = await fetch(
+          `${apiUrl}/notification/${userId}/view-all`
+        ).then((res) => res.json());
 
-      if (res?.notifications) {
-        dispatch(updateAllNotifications({ notifications: res.notifications }));
-      }
-    })();
+        if (res?.notifications) {
+          dispatch(
+            updateAllNotifications({ notifications: res.notifications })
+          );
+        }
+      })();
+    }
   }, []);
 
   useEffect(() => {

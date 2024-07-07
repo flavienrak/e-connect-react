@@ -6,6 +6,7 @@ import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { isEmpty } from "../../lib/allFunctions";
 import { UidContext } from "../../context/UidContext";
+import UserMessage from "../Message/UserMessage";
 
 export default function Search() {
   const { posts } = useSelector((state) => state.posts);
@@ -167,7 +168,42 @@ export default function Search() {
             )}
 
             {!isEmpty(messageResult) && active === items[2].active && (
-              <>Messages</>
+              <>
+                <div className="w-full grid grid-cols-1 gap-2 flex-wrap xl:grid-cols-2">
+                  {messageResult.map((item) => {
+                    const actualUser = users.find(
+                      (us) => us._id === item.userId
+                    );
+                    const actualMessages = item.messages;
+
+                    const notif = actualMessages.filter(
+                      (item) =>
+                        item.senderId === actualUser?._id &&
+                        item.receiverId === userId &&
+                        item.viewed === false
+                    )?.length;
+
+                    const viewed =
+                      (actualMessages?.every((item) => item.viewed === true) &&
+                        actualMessages[actualMessages.length - 1]?.senderId ===
+                          actualUser?._id) ||
+                      actualMessages[actualMessages.length - 1]?.senderId ===
+                        userId;
+
+                    if (!isEmpty(actualUser) && !isEmpty(actualMessages))
+                      return (
+                        <div key={actualUser._id} className="w-full">
+                          <UserMessage
+                            message={actualMessages[actualMessages.length - 1]}
+                            user={actualUser}
+                            notif={notif > 0 ? notif : null}
+                            viewed={viewed}
+                          />
+                        </div>
+                      );
+                  })}
+                </div>
+              </>
             )}
             <br />
           </>

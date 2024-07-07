@@ -8,7 +8,7 @@ import { SocketContext } from "../../context/SocketContext";
 import { updateAllNotifications } from "../../redux/slices/notificationsSlice";
 import { useDispatch } from "react-redux";
 
-export default function UserMessage({ user, message, notif }) {
+export default function UserMessage({ user, message, notif, viewed }) {
   const { isOnline } = useContext(SocketContext);
   const { path, currentQuery, formatDate, apiUrl, userId } =
     useContext(UidContext);
@@ -31,7 +31,7 @@ export default function UserMessage({ user, message, notif }) {
     {
       url: path,
       query: {
-        path: currentQuery.path,
+        path: "message",
         user: user._id,
       },
     },
@@ -57,7 +57,7 @@ export default function UserMessage({ user, message, notif }) {
           <div className="flex justify-between items-center gap-2">
             <label
               className={`text-sm line-clamp-1 text-[var(--opposite)] ${
-                message.status === "vue" ? "opacity-80 font-light" : ""
+                viewed ? "opacity-50 font-light" : "font-semibold"
               }`}
             >
               {message.message}

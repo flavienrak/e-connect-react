@@ -29,6 +29,8 @@ export default function Message() {
     })();
   }, []);
 
+  console.log("ici");
+
   return (
     <div className="mt-6 w-full">
       <div />
@@ -58,6 +60,13 @@ export default function Message() {
                       item.viewed === false
                   )?.length;
 
+                  const viewed =
+                    (actualMessages?.every((item) => item.viewed === true) &&
+                      actualMessages[actualMessages.length - 1]?.senderId ===
+                        actualUser?._id) ||
+                    actualMessages[actualMessages.length - 1]?.senderId ===
+                      userId;
+
                   if (!isEmpty(actualUser) && !isEmpty(actualMessages))
                     return (
                       <div key={actualUser._id} className="w-full">
@@ -65,6 +74,7 @@ export default function Message() {
                           message={actualMessages[actualMessages.length - 1]}
                           user={actualUser}
                           notif={notif > 0 ? notif : null}
+                          viewed={viewed}
                         />
                       </div>
                     );

@@ -8,15 +8,18 @@ import { isEmpty } from "../../lib/allFunctions";
 import { UidContext } from "../../context/UidContext";
 import { updateUserInfos } from "../../redux/slices/userSlice";
 import { IoCamera } from "react-icons/io5";
+import { FaUser } from "react-icons/fa";
 
 export default function EditProfil() {
   const { user } = useSelector((state) => state.user);
-  const { apiUrl, toastStyle } = useContext(UidContext);
+  const { apiUrl, toastStyle, profilUrl } = useContext(UidContext);
 
   const dispatch = useDispatch();
 
   const [name, setName] = useState({ value: user.name || "", valid: false });
-  const [image, setImage] = useState(!isEmpty(user.image) ? user.image : "");
+  const [image, setImage] = useState(
+    !isEmpty(user.image) ? profilUrl + user.image : ""
+  );
   const [file, setFile] = useState(null);
   const [editProfil, setEditProfil] = useState(false);
 
@@ -97,7 +100,19 @@ export default function EditProfil() {
       {editProfil && (
         <div className="flex w-full gap-4">
           <div className="relative flex gap-4 flex-col items-center">
-            <ProfilImg image={image} />
+            <div className="relative min-w-10 min-h-10 cursor-pointer">
+              {isEmpty(image) ? (
+                <i className="w-32 h-32 rounded-full flex justify-center items-center bg-[var(--bg-secondary)] text-[var(--white)]">
+                  <FaUser size={"3.5rem"} />
+                </i>
+              ) : (
+                <img
+                  src={image}
+                  className="rounded-full object-cover h-32 w-32"
+                  alt=""
+                />
+              )}
+            </div>
 
             <label
               htmlFor="file"

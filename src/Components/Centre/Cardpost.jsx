@@ -23,6 +23,7 @@ import { Link } from "react-router-dom";
 import { updateUserInfos } from "../../redux/slices/userSlice";
 import { FaCircleCheck, FaRegCircleCheck } from "react-icons/fa6";
 import { SocketContext } from "../../context/SocketContext";
+import { PiSealCheckBold, PiSealCheckFill } from "react-icons/pi";
 
 export default function Cardpost({ sender, post, isOwn, isViewPost }) {
   const { user } = useSelector((state) => state.user);
@@ -143,7 +144,7 @@ export default function Cardpost({ sender, post, isOwn, isViewPost }) {
 
     if (res?.post) {
       dispatch(removeOnePostInfos({ post: res.post }));
-      toast.success("Post supprime avec succes", toastStyle);
+      toast.success("Post supprimé", toastStyle);
     }
   };
 
@@ -170,7 +171,7 @@ export default function Cardpost({ sender, post, isOwn, isViewPost }) {
 
     if (res?.post) {
       dispatch(updateUserInfos({ user: res.user }));
-      toast.success("Post supprime", toastStyle);
+      toast.success("Post rejetté", toastStyle);
     }
   };
 
@@ -193,9 +194,9 @@ export default function Cardpost({ sender, post, isOwn, isViewPost }) {
                       className="cursor-pointer hover:text-[var(--primary-color)] opacity-90"
                     >
                       {isFollowed ? (
-                        <FaCircleCheck size={"1rem"} />
+                        <PiSealCheckFill size={"1rem"} />
                       ) : (
-                        <FaRegCircleCheck size={"1rem"} />
+                        <PiSealCheckBold size={"1rem"} />
                       )}
                     </span>
                   </>

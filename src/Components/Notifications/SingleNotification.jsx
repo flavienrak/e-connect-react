@@ -16,7 +16,9 @@ export default function SingleNotification({ user, notification }) {
       return "A réagi à votre post";
     } else if (notification.commented) {
       return "A commenté votre post";
-    } else if (notification.newPost) {
+    } else if (notification.followed) {
+      return "S'est abonnée";
+    } else if (notification.newPostFollowed) {
       return "A publié un nouveau post";
     }
   };
@@ -25,9 +27,12 @@ export default function SingleNotification({ user, notification }) {
     const actualPath =
       notification.newPost || notification.liked || notification.commented
         ? "post"
+        : notification.followed
+        ? "profil"
         : "accueil";
 
     const postId = !isEmpty(notification.postId) ? notification.postId : null;
+    const userId = notification.followed ? notification.userId : null;
 
     return qs.stringifyUrl(
       {
@@ -35,6 +40,7 @@ export default function SingleNotification({ user, notification }) {
         query: {
           path: actualPath,
           ...(!isEmpty(postId) && { post: postId }),
+          ...(!isEmpty(userId) && { user: userId, active: "view-profil" }),
         },
       },
       { skipNull: true }

@@ -103,15 +103,12 @@ export default function Profil() {
             )}
 
             {!isEmpty(user?.followed) && active === items[1].active && (
-              <>
+              <div className="w-full grid grid-cols-2 gap-2">
                 {user.followed.map((item) => {
                   const actualUser = users.find((us) => us._id === item);
                   if (!isEmpty(actualUser))
                     return (
-                      <div
-                        key={item._id}
-                        className="w-full grid grid-cols-2 gap-2"
-                      >
+                      <div key={item._id} className="w-full ">
                         <Ajouter
                           user={actualUser}
                           isFollowed={user.followed.includes(actualUser._id)}
@@ -119,19 +116,16 @@ export default function Profil() {
                       </div>
                     );
                 })}
-              </>
+              </div>
             )}
 
             {!isEmpty(user?.followers) && active === items[2].active && (
-              <>
+              <div className="w-full grid grid-cols-2 gap-2">
                 {user.followers.map((item) => {
                   const actualUser = users.find((us) => us._id === item);
                   if (!isEmpty(actualUser))
                     return (
-                      <div
-                        key={item._id}
-                        className="w-full grid grid-cols-2 gap-2"
-                      >
+                      <div key={item._id} className="w-full ">
                         <Ajouter
                           user={actualUser}
                           isFollowed={user.followed.includes(item._id)}
@@ -139,7 +133,7 @@ export default function Profil() {
                       </div>
                     );
                 })}
-              </>
+              </div>
             )}
             <br />
           </div>

@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { UidContext } from "../../context/UidContext";
 import { addOnePostInfos } from "../../redux/slices/postsSlice";
 import { SocketContext } from "../../context/SocketContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Postpub() {
   const { user } = useSelector((state) => state.user);
@@ -17,6 +18,7 @@ export default function Postpub() {
   const { apiUrl, toastStyle, path, currentQuery } = useContext(UidContext);
 
   const dispatch = useDispatch();
+  const push = useNavigate();
 
   const [message, setMessage] = useState("");
   const [image, setImage] = useState("");
@@ -86,7 +88,7 @@ export default function Postpub() {
           },
           { skipNull: true }
         );
-        setActualLink(url);
+        push(url);
       }
     }
   };

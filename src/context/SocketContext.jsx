@@ -50,6 +50,9 @@ export default function SocketContextProvider({ children }) {
         setOnlineUsers(users);
       };
 
+      const viewProfil = (views) => {
+        dispatch(updateUserInfos({ user: { views } }));
+      };
       const followed = (obj) => {
         const { followers, notification } = obj;
         dispatch(updateUserInfos({ user: { followers } }));
@@ -60,7 +63,6 @@ export default function SocketContextProvider({ children }) {
         dispatch(updateUserInfos({ user: { followers } }));
         dispatch(deleteOneNotificationInfos({ notification }));
       };
-
       const newMessage = (obj) => {
         const { message, notification, userId } = obj;
         dispatch(addMessageInfos({ message, userId }));
@@ -86,6 +88,8 @@ export default function SocketContextProvider({ children }) {
         dispatch(deleteOneNotificationInfos({ notification }));
       };
 
+      socket.on("viewProfil", viewProfil);
+
       socket.on("followed", followed);
       socket.on("unfollowed", unfollowed);
 
@@ -94,6 +98,8 @@ export default function SocketContextProvider({ children }) {
 
       socket.on("deletePost", deletePost);
       socket.on("createPost", addNotification);
+      socket.on("newPostFollowed", addNotification);
+      socket.on("deletePostNotification", deleteNotification);
       socket.on("editPostNotification", addNotification);
 
       socket.on("likePost", updateLikesPost);
@@ -111,6 +117,8 @@ export default function SocketContextProvider({ children }) {
       socket.on("getOnlineUsers", getOnlineUsers);
 
       return () => {
+        socket.off("viewProfil", viewProfil);
+
         socket.off("followed", followed);
         socket.off("unfollowed", unfollowed);
 
@@ -119,6 +127,8 @@ export default function SocketContextProvider({ children }) {
 
         socket.off("deletePost", deletePost);
         socket.off("createPost", addNotification);
+        socket.off("newPostFollowed", addNotification);
+        socket.off("deletePostNotification", deleteNotification);
         socket.off("editPostNotification", addNotification);
 
         socket.off("likePost", updateLikesPost);

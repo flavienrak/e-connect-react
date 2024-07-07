@@ -105,6 +105,18 @@ export default function Login() {
     }
   }, [nom.value, email.value, password.value]);
 
+  useEffect(() => {
+    if (isSubmit) {
+      if (!nom.valid) {
+        toast.error("Nom moins de 6 caracteres", toastStyle);
+      } else if (!email.valid) {
+        toast.error("Email invalide", toastStyle);
+      } else if (!password.valid) {
+        toast.error("Mot de passe moins de 6 caracteres", toastStyle);
+      }
+    }
+  }, [isSubmit]);
+
   const handleSwitch = (value) => {
     setNom({ value: "", valid: false });
     setEmail({ value: "", valid: false });

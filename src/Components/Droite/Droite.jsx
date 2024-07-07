@@ -13,7 +13,7 @@ export default function Droite() {
   const { user } = useSelector((state) => state.user);
   const { users } = useSelector((state) => state.users);
   const { messages } = useSelector((state) => state.messages);
-  const { path } = useContext(UidContext);
+  const { path, userId } = useContext(UidContext);
 
   const [suggestUsers, setSuggestUsers] = useState([]);
 
@@ -61,6 +61,19 @@ export default function Droite() {
               const actualUser = users.find((us) => us._id === item.userId);
               const actualMessages = item.messages;
 
+              const notif = actualMessages.filter(
+                (item) =>
+                  item.senderId === actualUser?._id &&
+                  item.receiverId === userId &&
+                  item.viewed === false
+              )?.length;
+
+              const viewed =
+                (actualMessages?.every((item) => item.viewed === true) &&
+                  actualMessages[actualMessages.length - 1]?.senderId ===
+                    actualUser?._id) ||
+                actualMessages[actualMessages.length - 1]?.senderId === userId;
+
               if (!isEmpty(actualUser) && !isEmpty(actualMessages) && index < 3)
                 return (
                   <Link
@@ -71,6 +84,8 @@ export default function Droite() {
                     <Messageperso
                       message={actualMessages[actualMessages.length - 1]}
                       user={actualUser}
+                      notif={notif > 0 ? notif : null}
+                      viewed={viewed}
                     />
                   </Link>
                 );

@@ -147,7 +147,10 @@ export default function Gauche() {
                   (notif) => !notif.viewed && notif.commented
                 ).length +
                 notifications.filter((notif) => !notif.viewed && notif.followed)
-                  .length;
+                  .length +
+                notifications.filter(
+                  (notif) => !notif.viewed && notif.newPostFollowed
+                ).length;
             }
           }
         });
