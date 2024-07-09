@@ -12,7 +12,7 @@ const persistSlice = createSlice({
   reducers: {
     updatePersistInfos: (state, action) => {
       const { authToken, mode, theme } = action.payload;
-      if (authToken !== undefined) {
+      if (typeof authToken !== "undefined") {
         state.authToken = authToken;
       }
       if (mode) {

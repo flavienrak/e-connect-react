@@ -71,7 +71,7 @@ export default function UidContextProvider({ children }) {
             push("/home?path=accueil");
           }
         } else {
-          dispatch(updatePersistInfos({ authToken: null }));
+          dispatch(updatePersistInfos({ authToken: "" }));
           if (protectedPaths.includes(location.pathname)) {
             push("/login");
           }
@@ -95,7 +95,7 @@ export default function UidContextProvider({ children }) {
           dispatch(fetchUserInfos({ user: res.user }));
           setGetNotifications(true);
         } else {
-          dispatch(updatePersistInfos({ authToken: null }));
+          dispatch(updatePersistInfos({ authToken: "" }));
           if (protectedPaths.includes(location.pathname)) {
             push("/login");
           }

@@ -53,6 +53,7 @@ export default function Postpub() {
   const handleReset = () => {
     setImage("");
     setMessage("");
+    setFile(null)
   };
 
   const handleSubmit = async (e) => {
@@ -135,7 +136,7 @@ export default function Postpub() {
 
             {!isEmpty(message.trim()) && (
               <div className="flex items-center gap-2">
-                <p className="text-sm text-[var(--opposite)] font-light">
+                <p className="text-sm text-[var(--opposite)] font-light whitespace-pre-line">
                   {message}
                 </p>
               </div>

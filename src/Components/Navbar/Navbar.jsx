@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import qs from "query-string";
 
 import { IoMdLogOut } from "react-icons/io";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { updatePersistInfos } from "../../redux/slices/persistSlice";
 import { useContext, useEffect, useState } from "react";
 import { UidContext } from "../../context/UidContext";
@@ -15,6 +15,7 @@ export default function Navbar() {
   const dispatch = useDispatch();
   const push = useNavigate();
 
+  const { authToken } = useSelector((state) => state.persistInfos);
   const { showLogout, loginOut, toastStyle, path, currentQuery, refetchPost } =
     useContext(UidContext);
 
@@ -73,7 +74,9 @@ export default function Navbar() {
   };
 
   const handleLogout = () => {
-    dispatch(updatePersistInfos({ authToken: null }));
+    if (!isEmpty(authToken)) {
+      dispatch(updatePersistInfos({ authToken: "" }));
+    }
     window.location = "/login";
   };
 

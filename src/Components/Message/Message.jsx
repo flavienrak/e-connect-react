@@ -29,8 +29,6 @@ export default function Message() {
     })();
   }, []);
 
-  console.log("ici");
-
   return (
     <div className="mt-6 w-full">
       <div />
